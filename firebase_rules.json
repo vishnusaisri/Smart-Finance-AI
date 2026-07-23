@@ -1,0 +1,56 @@
+{
+  "rules": {
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && auth.uid == $userId",
+        
+        "expenses": {
+          "$expenseId": {
+            ".read": "auth != null && auth.uid == $userId",
+            ".write": "auth != null && auth.uid == $userId",
+            ".validate": "newData.hasChildren(['id', 'amount', 'category', 'date'])",
+            "amount": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "category": {
+              ".validate": "newData.isString() && newData.val().length > 0"
+            },
+            "date": {
+              ".validate": "newData.isString()"
+            }
+          }
+        },
+        
+        "budgets": {
+          "$budgetId": {
+            ".read": "auth != null && auth.uid == $userId",
+            ".write": "auth != null && auth.uid == $userId",
+            ".validate": "newData.hasChildren(['id', 'category', 'amount', 'period'])"
+          }
+        },
+        
+        "goals": {
+          "$goalId": {
+            ".read": "auth != null && auth.uid == $userId",
+            ".write": "auth != null && auth.uid == $userId"
+          }
+        },
+        
+        "insights": {
+          "$insightId": {
+            ".read": "auth != null && auth.uid == $userId",
+            ".write": "auth != null && auth.uid == $userId"
+          }
+        },
+        
+        "chats": {
+          "$chatId": {
+            ".read": "auth != null && auth.uid == $userId",
+            ".write": "auth != null && auth.uid == $userId"
+          }
+        }
+      }
+    }
+  }
+}
