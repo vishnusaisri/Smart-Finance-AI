@@ -5,6 +5,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../profile/providers/profile_providers.dart';
 import '../../expense/controllers/expense_controller.dart';
+import '../services/ai_intent_analyzer.dart';
 
 class AIAssistantScreen extends ConsumerStatefulWidget {
   const AIAssistantScreen({super.key});
@@ -49,6 +50,11 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
   }
 
   String _generateSmartResponse(String question, Map<String, dynamic> ctx) {
+    final intentResult = AIIntentAnalyzer.analyze(question);
+    if (intentResult.response != null) {
+      return intentResult.response!;
+    }
+
     final q = question.toLowerCase();
     final income = ctx['income'] as double;
     final totalExpenses = ctx['totalExpenses'] as double;

@@ -4,6 +4,7 @@ import 'dart:async';
 import '../models/ai_insight.dart';
 import '../../features/profile/providers/profile_providers.dart';
 import '../../features/expense/controllers/expense_controller.dart';
+import '../../features/ai_assistant/services/ai_intent_analyzer.dart';
 
 // Gemini API Key provider
 final geminiApiKeyProvider = Provider<String>((ref) {
@@ -544,6 +545,10 @@ Example:
 
   /// Generate mock answer
   String _generateMockAnswer(String question) {
+    final intent = AIIntentAnalyzer.analyze(question);
+    if (intent.response != null) {
+      return intent.response!;
+    }
     return 'Based on your financial data, I recommend focusing on reducing discretionary spending by 15% and increasing your emergency fund to cover 6 months of expenses. Would you like specific recommendations for your top spending categories?';
   }
 }

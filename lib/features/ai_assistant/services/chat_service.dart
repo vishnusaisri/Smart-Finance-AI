@@ -8,6 +8,7 @@ import '../../expense/controllers/expense_controller.dart';
 import '../../profile/providers/profile_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/snackbar_utils.dart';
+import 'ai_intent_analyzer.dart';
 
 class ChatMessage {
   final String id;
@@ -131,6 +132,11 @@ What would you like to know about your finances today?''',
   }
 
   Future<String> _getAIResponse(String message) async {
+    final intentResult = AIIntentAnalyzer.analyze(message);
+    if (intentResult.response != null) {
+      return intentResult.response!;
+    }
+
     // Get real user context from Firebase
     final auth = FirebaseAuth.instance.currentUser;
     if (auth == null) {
