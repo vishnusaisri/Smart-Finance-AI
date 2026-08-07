@@ -52,10 +52,10 @@ jobs:
 
       - name: Start Background Preview Server & Check Health
         run: |
-          (npx vite preview --port 5173 --host 127.0.0.1 --base /Smart-Finance-AI/ &)
+          (npx vite preview --port 5173 --strictPort --host 127.0.0.1 --base /Smart-Finance-AI/ &) || true
           sleep 4
-          if ! curl --fail --silent --output /dev/null http://127.0.0.1:5173/; then
-            echo "Vite preview not responsive, starting Python HTTP server fallback..."
+          if ! curl --fail --silent --output /dev/null http://127.0.0.1:5173/ ; then
+            echo "Vite preview not responsive on 5173, launching Python HTTP server..."
             (cd dist && python3 -m http.server 5173 &)
             sleep 4
           fi

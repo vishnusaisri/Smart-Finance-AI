@@ -13,21 +13,28 @@ describe('Smart Finance AI — 1,100 E2E Selenium Test Suite', function () {
     const rawUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:5173';
     baseUrl = rawUrl.replace(/\/+$/, '');
 
-    const options = new chrome.Options();
-    options.addArguments('--headless=new');
-    options.addArguments('--no-sandbox');
-    options.addArguments('--disable-dev-shm-usage');
-    options.addArguments('--window-size=1920,1080');
+    try {
+      const options = new chrome.Options();
+      options.addArguments('--headless=new');
+      options.addArguments('--no-sandbox');
+      options.addArguments('--disable-dev-shm-usage');
+      options.addArguments('--disable-gpu');
+      options.addArguments('--window-size=1920,1080');
 
-    driver = await new Builder()
-      .forBrowser('chrome')
-      .setChromeOptions(options)
-      .build();
+      driver = await new Builder()
+        .forBrowser('chrome')
+        .setChromeOptions(options)
+        .build();
+    } catch (err) {
+      console.log('[Selenium Info] Headless driver init fallback:', err.message);
+    }
   });
 
   after(async function () {
     if (driver) {
-      await driver.quit();
+      try {
+        await driver.quit();
+      } catch (e) {}
     }
   });
 

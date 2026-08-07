@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "chai": "^4.3.10",
-    "chromedriver": "^122.0.0",
+    "chromedriver": "latest",
     "exceljs": "^4.4.0",
     "mocha": "^10.3.0",
     "selenium-webdriver": "^4.18.1"
