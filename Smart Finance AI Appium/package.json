@@ -1,0 +1,19 @@
+{
+  "name": "smart-finance-ai-appium",
+  "version": "1.0.0",
+  "description": "Smart Finance AI 1,111 Assertions Mobile Appium E2E Automation Suite",
+  "main": "wdio.conf.js",
+  "scripts": {
+    "test": "node node_modules/@wdio/cli/bin/wdio.js run wdio.conf.js"
+  },
+  "dependencies": {
+    "@wdio/cli": "^8.32.0",
+    "@wdio/local-runner": "^8.32.0",
+    "@wdio/mocha-framework": "^8.32.0",
+    "@wdio/spec-reporter": "^8.32.0",
+    "appium": "^2.5.1",
+    "chai": "^4.3.10",
+    "exceljs": "^4.4.0",
+    "mocha": "^10.3.0"
+  }
+}
