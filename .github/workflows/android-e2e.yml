@@ -64,10 +64,7 @@ jobs:
           target: default
           arch: x86_64
           profile: Nexus 6
-          script: |
-            chmod +x "Smart Finance AI Appium/scripts/ci_run_tests.sh"
-            cd "Smart Finance AI Appium"
-            ./scripts/ci_run_tests.sh
+          script: bash "./Smart Finance AI Appium/scripts/ci_run_tests.sh"
 
       - name: Inject E2E Reports into Build Directory
         if: always()

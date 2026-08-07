@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APPIUM_DIR="$( cd "${SCRIPT_DIR}/.." && pwd )"
+cd "${APPIUM_DIR}"
+
 echo "=== 📱 Smart Finance AI Mobile Appium CI Runner ==="
+echo "Working directory: $(pwd)"
 
 # Inject GITHUB_PATH if defined
 if [ -n "${GITHUB_PATH}" ] && [ -f "${GITHUB_PATH}" ]; then
@@ -25,7 +30,6 @@ fi
 # Start Appium Server
 echo "Starting Appium Server on port 4723..."
 appium --log-level warn > /tmp/appium.log 2>&1 &
-APPIUM_PID=$!
 
 # Wait for Appium
 echo "Waiting for Appium server to respond on port 4723..."
