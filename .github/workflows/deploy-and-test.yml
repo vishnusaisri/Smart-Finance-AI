@@ -52,9 +52,13 @@ jobs:
 
       - name: Start Background Preview Server & Check Health
         run: |
-          npx vite preview --port 5173 --host 127.0.0.1 --base /Smart-Finance-AI/ & || (cd dist && python3 -m http.server 5173 &)
+          (npx vite preview --port 5173 --host 127.0.0.1 --base /Smart-Finance-AI/ &)
           sleep 4
-          curl --fail --silent --output /dev/null http://127.0.0.1:5173/ || echo "Preview server started"
+          if ! curl --fail --silent --output /dev/null http://127.0.0.1:5173/; then
+            echo "Vite preview not responsive, starting Python HTTP server fallback..."
+            (cd dist && python3 -m http.server 5173 &)
+            sleep 4
+          fi
           echo "TEST_BASE_URL=http://127.0.0.1:5173" >> $GITHUB_ENV
 
       - name: Run 1,100 E2E Selenium Test Suite
