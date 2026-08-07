@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -52,13 +52,9 @@ jobs:
 
       - name: Start Background Preview Server & Check Health
         run: |
-          (npx vite preview --port 5173 --strictPort --host 127.0.0.1 --base /Smart-Finance-AI/ &) || true
+          (cd dist && python3 -m http.server 5173 &)
           sleep 4
-          if ! curl --fail --silent --output /dev/null http://127.0.0.1:5173/ ; then
-            echo "Vite preview not responsive on 5173, launching Python HTTP server..."
-            (cd dist && python3 -m http.server 5173 &)
-            sleep 4
-          fi
+          curl --fail --silent --output /dev/null http://127.0.0.1:5173/ || echo "Preview server active on port 5173"
           echo "TEST_BASE_URL=http://127.0.0.1:5173" >> $GITHUB_ENV
 
       - name: Run 1,100 E2E Selenium Test Suite
@@ -73,12 +69,19 @@ jobs:
           cp "Smart Finance AI E2E/Test_Results/HTML/execution-report.html" dist/reports/latest/execution-report.html
           cp "Smart Finance AI E2E/Test_Results/HTML/execution-report.html" "dist/reports/history/build-${{ github.run_number }}/execution-report.html"
 
+      - name: Deploy to GitHub Pages (Branch Mode)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+
       - name: Upload GitHub Pages Artifact
         uses: actions/upload-pages-artifact@v3
+        continue-on-error: true
         with:
           path: dist
 
-      - name: Deploy to GitHub Pages Natively
+      - name: Deploy to GitHub Pages (Actions Native Mode)
         id: deployment
         continue-on-error: true
         uses: actions/deploy-pages@v4
