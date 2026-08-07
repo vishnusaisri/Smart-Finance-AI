@@ -1,0 +1,16 @@
+{
+  "name": "smart-finance-ai-e2e",
+  "version": "1.0.0",
+  "description": "Smart Finance AI 1,100 Assertions Web E2E Selenium Test Suite & Reporting Engine",
+  "main": "tests/mega_web_1100.test.js",
+  "scripts": {
+    "test": "mocha tests/mega_web_1100.test.js --reporter utils/excelReporter.js --timeout 120000"
+  },
+  "dependencies": {
+    "chai": "^4.3.10",
+    "chromedriver": "^122.0.0",
+    "exceljs": "^4.4.0",
+    "mocha": "^10.3.0",
+    "selenium-webdriver": "^4.18.1"
+  }
+}
