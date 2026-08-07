@@ -80,6 +80,7 @@ jobs:
 
       - name: Deploy to GitHub Pages Natively
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v4
 
       - name: Generate GitHub Step Summary
