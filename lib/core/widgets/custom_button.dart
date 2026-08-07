@@ -37,25 +37,41 @@ class CustomButton extends StatelessWidget {
   }
 
   Widget _buildButton() {
+    Color getTextColor() {
+      switch (type) {
+        case ButtonType.primary:
+        case ButtonType.danger:
+          return Colors.white;
+        case ButtonType.secondary:
+          return AppColors.textPrimary;
+        case ButtonType.ghost:
+          return AppColors.primary;
+      }
+    }
+
+    final textColor = getTextColor();
+
     final child = isLoading
         ? SizedBox(
             height: 20,
             width: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                type == ButtonType.ghost ? AppColors.primary : Colors.white,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(textColor),
             ),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 18),
+                Icon(icon, size: 18, color: textColor),
                 SizedBox(width: AppSpacing.sm),
               ],
-              Text(text),
+              Text(
+                text,
+                style: AppTextStyles.buttonText.copyWith(color: textColor),
+              ),
             ],
           );
 
@@ -63,16 +79,27 @@ class CustomButton extends StatelessWidget {
       case ButtonType.primary:
         return ElevatedButton(
           onPressed: isLoading ? null : onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+          ),
           child: child,
         );
       case ButtonType.secondary:
         return OutlinedButton(
           onPressed: isLoading ? null : onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(color: Color(0x33FFFFFF)),
+          ),
           child: child,
         );
       case ButtonType.ghost:
         return TextButton(
           onPressed: isLoading ? null : onPressed,
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+          ),
           child: child,
         );
       case ButtonType.danger:
@@ -80,6 +107,7 @@ class CustomButton extends StatelessWidget {
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.danger,
+            foregroundColor: Colors.white,
           ),
           child: child,
         );

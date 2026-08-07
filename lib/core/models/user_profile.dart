@@ -84,22 +84,36 @@ class UserProfile {
   }
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
+    DateTime? parseDate(dynamic d) {
+      if (d == null) return null;
+      if (d is int) return DateTime.fromMillisecondsSinceEpoch(d);
+      return DateTime.tryParse(d.toString());
+    }
+
+    final rawGoals = map['goals'];
+    List<FinancialGoal> parsedGoals = [];
+    if (rawGoals is List) {
+      for (final g in rawGoals) {
+        if (g is Map) {
+          try {
+            parsedGoals.add(FinancialGoal.fromMap(Map<String, dynamic>.from(g)));
+          } catch (_) {}
+        }
+      }
+    }
+
     return UserProfile(
-      uid: map['uid'] as String? ?? '',
-      email: map['email'] as String? ?? '',
-      fullName: map['fullName'] as String? ?? map['name'] as String? ?? '',
-      avatarUrl: map['avatarUrl'] as String?,
+      uid: map['uid']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      fullName: map['fullName']?.toString() ?? map['name']?.toString() ?? '',
+      avatarUrl: map['avatarUrl']?.toString(),
       monthlyIncome: safeDouble(map['monthlyIncome']),
-      currency: map['currency'] as String? ?? 'INR',
-      goals: map['goals'] != null
-          ? (map['goals'] as List)
-              .map((g) => FinancialGoal.fromMap(Map<String, dynamic>.from(g as Map)))
-              .toList()
-          : [],
-      preferences: map['preferences'] != null ? Map<String, dynamic>.from(map['preferences'] as Map) : {},
-      name: map['name'] as String? ?? map['fullName'] as String? ?? '',
+      currency: map['currency']?.toString() ?? 'INR',
+      goals: parsedGoals,
+      preferences: map['preferences'] is Map ? Map<String, dynamic>.from(map['preferences'] as Map) : {},
+      name: map['name']?.toString() ?? map['fullName']?.toString() ?? '',
       savingsGoal: safeDouble(map['savingsGoal']),
-      locale: map['locale'] as String? ?? 'en_IN',
+      locale: map['locale']?.toString() ?? 'en_IN',
       notificationsEnabled: map['notificationsEnabled'] as bool? ?? true,
       budgetAlertsEnabled: map['budgetAlertsEnabled'] as bool? ?? true,
       spendingLimitAlerts: map['spendingLimitAlerts'] as bool? ?? true,
@@ -107,12 +121,8 @@ class UserProfile {
       weeklyReports: map['weeklyReports'] as bool? ?? true,
       monthlyReports: map['monthlyReports'] as bool? ?? true,
       darkMode: map['darkMode'] as bool? ?? true,
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'] as String)
-          : null,
-      updatedAt: map['updatedAt'] != null
-          ? DateTime.parse(map['updatedAt'] as String)
-          : null,
+      createdAt: parseDate(map['createdAt']),
+      updatedAt: parseDate(map['updatedAt']),
     );
   }
 
@@ -161,6 +171,38 @@ class UserProfile {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  String getCurrencySymbol() {
+    switch (currency.toUpperCase()) {
+      case 'USD':
+        return '\$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      case 'INR':
+        return '₹';
+      case 'JPY':
+        return '¥';
+      case 'AUD':
+        return 'A\$';
+      case 'CAD':
+        return 'C\$';
+      default:
+        return '₹';
+    }
+  }
+
+  double getSavingsRate() {
+    if (monthlyIncome <= 0) return 0.0;
+    return (savingsGoal / monthlyIncome) * 100;
+  }
+
+  String formatCurrency(double amount) {
+    final symbol = getCurrencySymbol();
+    final formattedAmount = amount.toStringAsFixed(2);
+    return '$symbol$formattedAmount';
+  }
 }
 
 class FinancialGoal {
@@ -192,15 +234,19 @@ class FinancialGoal {
   }
 
   factory FinancialGoal.fromMap(Map<String, dynamic> map) {
+    DateTime? parseDate(dynamic d) {
+      if (d == null) return null;
+      if (d is int) return DateTime.fromMillisecondsSinceEpoch(d);
+      return DateTime.tryParse(d.toString());
+    }
+
     return FinancialGoal(
-      id: map['id'] as String? ?? '',
-      name: map['name'] as String? ?? '',
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
       targetAmount: safeDouble(map['targetAmount']),
       currentAmount: safeDouble(map['currentAmount']),
-      targetDate: map['targetDate'] != null
-          ? DateTime.parse(map['targetDate'] as String)
-          : null,
-      icon: map['icon'] as String?,
+      targetDate: parseDate(map['targetDate']),
+      icon: map['icon']?.toString(),
     );
   }
 

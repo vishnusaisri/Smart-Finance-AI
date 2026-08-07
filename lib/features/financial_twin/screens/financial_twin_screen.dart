@@ -863,9 +863,14 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            '\$${amount.toStringAsFixed(0)}',
-            style: AppTextStyles.h2.copyWith(color: color),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '\$${amount.toStringAsFixed(0)}',
+              style: AppTextStyles.h2.copyWith(color: color),
+              maxLines: 1,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(

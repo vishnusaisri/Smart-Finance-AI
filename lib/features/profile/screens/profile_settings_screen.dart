@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../core/services/cache_service.dart';
-import '../../../core/widgets/toast_overlay.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../routes/app_routes.dart';
 import 'widgets/profile_header.dart';
@@ -19,56 +17,6 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
-  String _selectedCurrency = 'USD';
-  String _selectedLocale = 'en_US';
-  bool _notificationsEnabled = true;
-  bool _aiInsightsEnabled = true;
-  bool _budgetAlertsEnabled = true;
-
-  final List<Map<String, String>> _currencies = [
-    {'code': 'USD', 'symbol': '\$', 'name': 'US Dollar'},
-    {'code': 'EUR', 'symbol': '€', 'name': 'Euro'},
-    {'code': 'GBP', 'symbol': '£', 'name': 'British Pound'},
-    {'code': 'INR', 'symbol': '₹', 'name': 'Indian Rupee'},
-    {'code': 'JPY', 'symbol': '¥', 'name': 'Japanese Yen'},
-    {'code': 'AUD', 'symbol': 'A\$', 'name': 'Australian Dollar'},
-    {'code': 'CAD', 'symbol': 'C\$', 'name': 'Canadian Dollar'},
-  ];
-
-  final List<Map<String, String>> _locales = [
-    {'code': 'en_US', 'name': 'English (US)'},
-    {'code': 'en_GB', 'name': 'English (UK)'},
-    {'code': 'es_ES', 'name': 'Spanish'},
-    {'code': 'fr_FR', 'name': 'French'},
-    {'code': 'de_DE', 'name': 'German'},
-    {'code': 'hi_IN', 'name': 'Hindi'},
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPreferences();
-  }
-
-  Future<void> _loadPreferences() async {
-    final cacheService = ref.read(cacheServiceProvider);
-    setState(() {
-      _selectedCurrency = cacheService.getCurrency();
-      _selectedLocale = cacheService.getLocale();
-    });
-  }
-
-  Future<void> _saveSettings() async {
-    final cacheService = ref.read(cacheServiceProvider);
-
-    await cacheService.saveCurrency(_selectedCurrency);
-    await cacheService.saveLocale(_selectedLocale);
-
-    if (mounted) {
-      ref.showSuccessToast('Settings saved successfully');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,13 +131,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 Navigator.pop(context);
                 await ref.read(authStateProvider.notifier).logout();
                 if (mounted) {
-                  context.go(RouteNames.login);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Signed out successfully'),
                       backgroundColor: Colors.green,
                     ),
                   );
+                  context.go(RouteNames.login);
                 }
               },
               style: ElevatedButton.styleFrom(

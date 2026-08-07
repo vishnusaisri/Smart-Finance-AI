@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_textfield.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/constants/app_strings.dart';
@@ -75,13 +76,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState == AuthState.loading;
 
     return Scaffold(
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 420),
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Form(
-            key: _formKey,
-            child: Column(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Form(
+                key: _formKey,
+                child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -159,7 +162,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: () {
                       context.push(RouteNames.forgotPassword);
                     },
-                    child: Text(AppStrings.forgotPassword),
+                    child: Text(
+                      AppStrings.forgotPassword,
+                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -171,43 +177,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   isLoading: isLoading,
                   fullWidth: true,
                 ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Google Sign-In Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final result = await ref.read(authStateProvider.notifier).signInWithGoogle();
-                      
-                      if (result['success'] == true && mounted) {
-                        // Check if financial setup is complete
-                        final cacheService = ref.read(cacheServiceProvider);
-                        final isFinancialSetupComplete = cacheService.isFinancialSetupComplete();
-                        if (!isFinancialSetupComplete) {
-                          context.go(RouteNames.financialSetup);
-                        } else {
-                          context.go(RouteNames.dashboard);
-                        }
-                      } else if (mounted) {
-                        final errorMessage = result['error'] as String? ?? 'Google Sign-In failed. Please try again.';
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(errorMessage),
-                            backgroundColor: const Color(0xFFEF4444),
-                            duration: const Duration(seconds: 4),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.g_mobiledata, size: 24),
-                    label: const Text('Continue with Google'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: AppSpacing.lg),
 
                 // Signup Link
@@ -216,13 +185,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       '${AppStrings.dontHaveAccount} ',
-                      style: AppTextStyles.bodyMedium,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
                     ),
                     TextButton(
                       onPressed: () {
                         context.push(RouteNames.signup);
                       },
-                      child: Text(AppStrings.signup),
+                      child: Text(
+                        AppStrings.signup,
+                        style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+                      ),
                     ),
                   ],
                 ),
@@ -231,6 +203,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }

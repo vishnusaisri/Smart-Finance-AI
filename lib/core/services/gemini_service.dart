@@ -7,8 +7,7 @@ import '../../features/expense/controllers/expense_controller.dart';
 
 // Gemini API Key provider
 final geminiApiKeyProvider = Provider<String>((ref) {
-  // Gemini API key for AI coaching and insights
-  return 'AIzaSyDpcdxddSTEoSeNF3IXxBoLw5cEMPuz9_o';
+  return ''; // API disabled - using local AI engine
 });
 
 // Gemini Service Provider
@@ -100,7 +99,7 @@ class GeminiService {
   GeminiService({required this.apiKey}) {
     if (!isMock) {
       _model = GenerativeModel(
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         apiKey: apiKey,
       );
     }
@@ -219,7 +218,9 @@ class GeminiService {
       final text = response.text ?? '';
 
       return _parseInsightsFromResponse(text);
-    } catch (e) {
+    } catch (e, st) {
+      print('Gemini generateCoachingInsights Error: $e');
+      print(st);
       // Fallback to mock insights on error
       return _generateMockInsights(
         monthlyIncome: monthlyIncome,
@@ -267,7 +268,9 @@ Keep it encouraging, specific, and actionable.
         savingsRate: savingsRate,
         transactionCount: transactionCount,
       );
-    } catch (e) {
+    } catch (e, st) {
+      print('Gemini generateFinancialSummary Error: $e');
+      print(st);
       return _generateMockSummary(
         monthlyIncome: monthlyIncome,
         totalExpenses: totalExpenses,
@@ -288,26 +291,63 @@ Keep it encouraging, specific, and actionable.
 
     try {
       final prompt = '''
-You are an expert financial advisor. Answer this question based on the user's financial context:
+You are an expert, empathetic financial advisor AI assistant for the Smart Finance app.
+Your goal is to provide highly personalized, conversational, and actionable financial advice based on the user's live data.
 
-USER CONTEXT:
+USER'S CURRENT FINANCIAL DATA:
 - Monthly Income: \$${userContext['monthlyIncome']}
-- Monthly Expenses: \$${userContext['totalExpenses']}
-- Savings Rate: ${userContext['savingsRate']}%
-- Top Spending: ${userContext['topCategory']}
+- Total Monthly Expenses: \$${userContext['totalExpenses']}
+- Savings Rate: ${userContext['savingsRate'].toStringAsFixed(1)}%
+- Top Spending Category: ${userContext['topCategory']}
 - Financial Health Score: ${userContext['healthScore']}/100
 
-QUESTION: $question
+USER QUESTION: $question
 
-Provide a concise, helpful, and actionable answer (2-4 sentences).
+INSTRUCTIONS:
+1. Speak in a friendly, conversational, and professional tone (like a real human advisor).
+2. Directly reference their actual financial data in your answer to make it highly personalized.
+3. Keep your response concise (3-4 sentences max). Use bullet points if listing multiple items.
+4. Always provide one clear, actionable recommendation they can apply today.
 ''';
 
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
       return response.text ?? _generateMockAnswer(question);
-    } catch (e) {
-      return _generateMockAnswer(question);
+    } catch (e, st) {
+      print('Gemini answerFinancialQuestion Error: $e');
+      print(st);
+      return 'Error connecting to AI: $e\n\nPlease check your API key and internet connection.';
     }
+  }
+
+  /// Answer budget specific questions
+  Future<String> answerBudgetQuestion({
+    required String question,
+    required Map<String, dynamic> userContext,
+  }) async {
+    final specializedContext = Map<String, dynamic>.from(userContext);
+    specializedContext['focus'] = 'Budget optimization, category limits, and spending leaks';
+    return answerFinancialQuestion(question: question, userContext: specializedContext);
+  }
+
+  /// Answer savings specific questions
+  Future<String> answerSavingsQuestion({
+    required String question,
+    required Map<String, dynamic> userContext,
+  }) async {
+    final specializedContext = Map<String, dynamic>.from(userContext);
+    specializedContext['focus'] = 'Savings rate improvement, emergency funds, and automated goal setting';
+    return answerFinancialQuestion(question: question, userContext: specializedContext);
+  }
+
+  /// Answer investment specific questions
+  Future<String> answerInvestmentQuestion({
+    required String question,
+    required Map<String, dynamic> userContext,
+  }) async {
+    final specializedContext = Map<String, dynamic>.from(userContext);
+    specializedContext['focus'] = 'Asset allocation, compound interest, index funds, and risk management';
+    return answerFinancialQuestion(question: question, userContext: specializedContext);
   }
 
   /// Build coaching prompt for Gemini

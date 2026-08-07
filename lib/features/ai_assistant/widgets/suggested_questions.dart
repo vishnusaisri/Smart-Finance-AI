@@ -53,7 +53,7 @@ class SuggestedQuestions extends StatelessWidget {
           ),
         ],
       ),
-    ).animate(target: 1, duration: const Duration(milliseconds: 500));
+    ).animate(target: 1).fadeIn(duration: const Duration(milliseconds: 500));
   }
 
   Widget _buildQuestionChip(BuildContext context, String question) {

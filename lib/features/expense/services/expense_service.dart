@@ -1,7 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/expense.dart';
 import '../../../core/models/budget.dart';
 import '../../budget/services/budget_service.dart';
@@ -18,8 +17,30 @@ class ExpenseService {
     return _database.child('users').child(_userId).child('expenses');
   }
 
-  DatabaseReference get _budgetsRef {
-    return _database.child('users').child(_userId).child('budgets');
+  // Helper to parse expenses list from dynamic snapshot value (Map or List)
+  List<Expense> _parseExpenses(dynamic val) {
+    if (val == null) return [];
+    final Iterable items;
+    if (val is Map) {
+      items = val.values;
+    } else if (val is List) {
+      items = val.where((e) => e != null);
+    } else {
+      return [];
+    }
+
+    final list = <Expense>[];
+    for (final item in items) {
+      if (item is Map) {
+        try {
+          list.add(Expense.fromMap(Map<String, dynamic>.from(item)));
+        } catch (e) {
+          debugPrint('Error parsing expense item: $e');
+        }
+      }
+    }
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
   }
 
   // Get all expenses from Realtime Database
@@ -29,11 +50,7 @@ class ExpenseService {
     try {
       final snapshot = await _expensesRef.get();
       if (snapshot.exists && snapshot.value != null) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        return data.values
-            .map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map)))
-            .toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
+        return _parseExpenses(snapshot.value);
       }
       return [];
     } catch (e) {
@@ -48,7 +65,7 @@ class ExpenseService {
     
     try {
       final snapshot = await _expensesRef.child(id).get();
-      if (snapshot.exists && snapshot.value != null) {
+      if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
         return Expense.fromMap(Map<String, dynamic>.from(snapshot.value as Map));
       }
       return null;
@@ -161,16 +178,7 @@ class ExpenseService {
     if (_userId.isEmpty) return Stream.value([]);
     
     return _expensesRef.onValue.map((event) {
-      final val = event.snapshot.value;
-      if (val == null) return <Expense>[];
-      if (val is Map) {
-        final list = (val as Map<dynamic, dynamic>).values
-            .map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map)))
-            .toList();
-        list.sort((a, b) => b.date.compareTo(a.date));
-        return list;
-      }
-      return <Expense>[];
+      return _parseExpenses(event.snapshot.value);
     });
   }
 }

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'user_profile_service.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
@@ -68,12 +68,25 @@ class AuthService {
 
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
-      // Sign in with Google using popup (recommended for Flutter Web)
-      final userCredential = await _firebaseAuth.signInWithPopup(
-        GoogleAuthProvider(),
-      );
+      UserCredential userCredential;
+      if (kIsWeb) {
+        userCredential = await _firebaseAuth.signInWithPopup(
+          GoogleAuthProvider(),
+        );
+      } else {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          return {'success': false, 'error': 'Google Sign-In was cancelled.'};
+        }
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        userCredential = await _firebaseAuth.signInWithCredential(credential);
+      }
       
-      // Store Google user profile into Firebase Realtime Database
       final user = userCredential.user;
       if (user != null) {
         await _storeUserProfile(user);

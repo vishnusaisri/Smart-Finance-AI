@@ -124,7 +124,7 @@ class _ChatInputState extends State<ChatInput> {
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.blue.withOpacity(0.3),
+                  color: Colors.blue.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -142,7 +142,7 @@ class _ChatInputState extends State<ChatInput> {
           ),
         ],
       ),
-    ).animate(target: 1, duration: const Duration(milliseconds: 500));
+    ).animate(target: 1).fadeIn(duration: const Duration(milliseconds: 500));
   }
 
   void _sendMessage() {
@@ -208,7 +208,7 @@ class _ChatInputState extends State<ChatInput> {
             ),
             _buildAttachmentOption(
               context,
-              attach_money,
+              Icons.attach_money,
               'Budget Report',
               () => Navigator.pop(context),
             ),

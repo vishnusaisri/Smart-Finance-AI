@@ -234,12 +234,16 @@ class AnalyticsScreen extends ConsumerWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        final monthStr = value.toString();
-                        if (monthStr.contains('-')) {
-                          final parts = monthStr.split('-');
-                          return Text('${parts[1]}/${parts[0].substring(2)}', style: AppTextStyles.labelSmall);
+                        final index = value.toInt();
+                        if (index >= 0 && index < sortedMonths.length) {
+                          final monthKey = sortedMonths[index].key;
+                          final parts = monthKey.split('-');
+                          if (parts.length == 2) {
+                            return Text('${parts[1]}/${parts[0].substring(2)}', style: AppTextStyles.labelSmall);
+                          }
+                          return Text(monthKey, style: AppTextStyles.labelSmall);
                         }
-                        return Text('');
+                        return const SizedBox.shrink();
                       },
                       reservedSize: 30,
                     ),

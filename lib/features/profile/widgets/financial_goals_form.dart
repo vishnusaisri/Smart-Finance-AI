@@ -137,7 +137,7 @@ class _FinancialGoalsFormState extends ConsumerState<FinancialGoalsForm> {
                   children: [
                     Icon(
                       Icons.trending_up,
-                      color: userProfile.getSavingsRate() >= 0.2 ? Colors.green : Colors.orange,
+                      color: userProfile.getSavingsRate() >= 20.0 ? Colors.green : Colors.orange,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -151,10 +151,10 @@ class _FinancialGoalsFormState extends ConsumerState<FinancialGoalsForm> {
                             ),
                           ),
                           Text(
-                            '${(userProfile.getSavingsRate() * 100).toStringAsFixed(1)}%',
+                            '${userProfile.getSavingsRate().toStringAsFixed(1)}%',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: userProfile.getSavingsRate() >= 0.2 ? Colors.green : Colors.orange,
+                              color: userProfile.getSavingsRate() >= 20.0 ? Colors.green : Colors.orange,
                             ),
                           ),
                         ],

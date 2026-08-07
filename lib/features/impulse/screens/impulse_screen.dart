@@ -152,7 +152,7 @@ class ImpulseScreen extends ConsumerWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isLow ? AppColors.success.withOpacity(0.2) : isHigh ? AppColors.warning.withOpacity(0.2) : AppColors.primary.withOpacity(0.2),
+                color: isLow ? AppColors.success.withValues(alpha: 0.2) : isHigh ? AppColors.warning.withValues(alpha: 0.2) : AppColors.primary.withValues(alpha: 0.2),
                 border: Border.all(
                   color: isLow ? AppColors.success : isHigh ? AppColors.warning : AppColors.primary,
                   width: 3,
@@ -248,7 +248,7 @@ class ImpulseScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           LinearProgressIndicator(
             value: weekendPercentage / 100,
-            backgroundColor: AppColors.textSecondary.withOpacity(0.2),
+            backgroundColor: AppColors.textSecondary.withValues(alpha: 0.2),
             color: isHigh ? AppColors.warning : AppColors.success,
             minHeight: 8,
           ),

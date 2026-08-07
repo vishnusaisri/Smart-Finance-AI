@@ -78,27 +78,25 @@ final filteredExpensesProvider = Provider<List<Expense>>((ref) {
 });
 
 // Expense Filter Provider
-class ExpenseFilterController {
-  ExpenseFilter _filter = ExpenseFilter();
+class ExpenseFilterController extends Notifier<ExpenseFilter> {
+  @override
+  ExpenseFilter build() => ExpenseFilter();
   
-  ExpenseFilter get filter => _filter;
-  
-  void update(ExpenseFilter filter) {
-    _filter = filter;
+  void updateFilter(ExpenseFilter filter) {
+    state = filter;
   }
   
   void reset() {
-    _filter = ExpenseFilter();
+    state = ExpenseFilter();
   }
 }
 
-final expenseFilterControllerProvider = Provider<ExpenseFilterController>((ref) {
+final expenseFilterControllerProvider = NotifierProvider<ExpenseFilterController, ExpenseFilter>(() {
   return ExpenseFilterController();
 });
 
 final expenseFilterProvider = Provider<ExpenseFilter>((ref) {
-  final controller = ref.watch(expenseFilterControllerProvider);
-  return controller.filter;
+  return ref.watch(expenseFilterControllerProvider);
 });
 
 // Expense Stats Provider - Real-time calculations from actual data

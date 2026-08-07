@@ -283,7 +283,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
                     color: isCompleted
                         ? AppColors.primary
                         : isCurrent
-                            ? AppColors.primary.withOpacity(0.5)
+                            ? AppColors.primary.withValues(alpha: 0.5)
                             : Colors.grey.shade700,
                     borderRadius: BorderRadius.circular(2),
                   ),
@@ -405,7 +405,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
         ),
         const SizedBox(height: AppSpacing.lg),
         DropdownButtonFormField<String>(
-          value: _currency,
+          initialValue: _currency,
           decoration: const InputDecoration(
             labelText: 'Preferred Currency',
             prefixIcon: Icon(Icons.currency_rupee),
@@ -460,7 +460,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
                   }
                 });
               },
-              selectedColor: AppColors.primary.withOpacity(0.2),
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
               backgroundColor: AppColors.surface,
               labelStyle: TextStyle(
                 color: isSelected ? AppColors.primary : AppColors.textPrimary,
@@ -491,24 +491,22 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
     return _buildStepContent(
       title: 'Spending Habits',
       description: 'How would you describe your spending style?',
-      children: [
-        ..._spendingHabits.map((habit) {
-          return RadioListTile<String>(
-            title: Text(habit),
-            subtitle: Text(_getSpendingHabitDescription(habit)),
-            value: habit,
-            groupValue: _spendingHabit,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _spendingHabit = value;
-                });
-              }
-            },
-            activeColor: AppColors.primary,
-          );
-        }).toList(),
-      ],
+      children: _spendingHabits.map((habit) {
+        return RadioListTile<String>(
+          title: Text(habit, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
+          subtitle: Text(_getSpendingHabitDescription(habit), style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          value: habit,
+          groupValue: _spendingHabit,
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _spendingHabit = value;
+              });
+            }
+          },
+          activeColor: AppColors.primary,
+        );
+      }).toList(),
     );
   }
 
@@ -529,24 +527,22 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
     return _buildStepContent(
       title: 'Investment Interest',
       description: 'What\'s your interest level in investments?',
-      children: [
-        ..._investmentLevels.map((level) {
-          return RadioListTile<String>(
-            title: Text(level),
-            subtitle: Text(_getInvestmentDescription(level)),
-            value: level,
-            groupValue: _investmentInterest,
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _investmentInterest = value;
-                });
-              }
-            },
-            activeColor: AppColors.primary,
-          );
-        }).toList(),
-      ],
+      children: _investmentLevels.map((level) {
+        return RadioListTile<String>(
+          title: Text(level, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
+          subtitle: Text(_getInvestmentDescription(level), style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          value: level,
+          groupValue: _investmentInterest,
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _investmentInterest = value;
+              });
+            }
+          },
+          activeColor: AppColors.primary,
+        );
+      }).toList(),
     );
   }
 
@@ -572,7 +568,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
       children: [
         ..._debtOptions.map((status) {
           return RadioListTile<String>(
-            title: Text(status),
+            title: Text(status, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary)),
             value: status,
             groupValue: _debtStatus,
             onChanged: (value) {
@@ -584,7 +580,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
             },
             activeColor: AppColors.primary,
           );
-        }).toList(),
+        }),
         if (_debtStatus == 'Medium' || _debtStatus == 'High')
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.lg),

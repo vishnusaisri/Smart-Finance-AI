@@ -59,9 +59,8 @@ class UserProfileService {
 
     try {
       final snapshot = await _database!.ref('users/$userId').get();
-      if (snapshot.exists && snapshot.value != null) {
-        final Map<dynamic, dynamic> val = snapshot.value as Map<dynamic, dynamic>;
-        final Map<String, dynamic> data = _convertToMap(val) ?? {};
+      if (snapshot.exists && snapshot.value != null && snapshot.value is Map) {
+        final Map<String, dynamic> data = _convertToMap(snapshot.value) ?? {};
         return UserProfile.fromMap(data);
       }
       return null;

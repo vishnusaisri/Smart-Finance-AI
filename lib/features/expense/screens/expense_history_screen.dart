@@ -37,7 +37,8 @@ class ExpenseHistoryScreen extends ConsumerWidget {
           ],
         ),
       ),
-      data: (expenses) {
+      data: (_) {
+        final filteredExpenses = ref.watch(filteredExpensesProvider);
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
@@ -76,7 +77,7 @@ class ExpenseHistoryScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
 
               // Expense List
-              if (expenses.isEmpty)
+              if (filteredExpenses.isEmpty)
                 Center(
                   child: Column(
                     children: [
@@ -98,10 +99,10 @@ class ExpenseHistoryScreen extends ConsumerWidget {
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: expenses.length,
+                  itemCount: filteredExpenses.length,
                   separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
                   itemBuilder: (context, index) {
-                    final expense = expenses[index];
+                    final expense = filteredExpenses[index];
                     return ExpenseTile(
                       expense: expense,
                       onDelete: () {

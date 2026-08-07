@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/text_styles.dart';
 
@@ -52,7 +53,7 @@ class CustomTextField extends StatelessWidget {
           Text(
             label!,
             style: AppTextStyles.labelMedium.copyWith(
-              color: Colors.white.withOpacity(0.7),
+              color: AppColors.textSecondary,
             ),
           ),
           SizedBox(height: AppSpacing.sm),
@@ -71,8 +72,11 @@ class CustomTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           focusNode: focusNode,
           textInputAction: textInputAction,
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+            labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             contentPadding: EdgeInsets.symmetric(

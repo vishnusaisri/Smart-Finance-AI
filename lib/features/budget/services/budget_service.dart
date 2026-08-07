@@ -40,19 +40,39 @@ class BudgetService {
     return null;
   }
 
+  // Helper to parse budgets list from dynamic snapshot value
+  List<Budget> _parseBudgets(dynamic val) {
+    if (val == null) return [];
+    final Iterable items;
+    if (val is Map) {
+      items = val.values;
+    } else if (val is List) {
+      items = val.where((e) => e != null);
+    } else {
+      return [];
+    }
+
+    final list = <Budget>[];
+    for (final item in items) {
+      if (item is Map) {
+        try {
+          final convertedMap = _convertToMap(item) ?? Map<String, dynamic>.from(item);
+          list.add(Budget.fromMap(convertedMap));
+        } catch (e) {
+          debugPrint('Error parsing budget item: $e');
+        }
+      }
+    }
+    return list;
+  }
+
   Future<List<Budget>> getBudgets() async {
     if (_userId.isEmpty) return [];
     
     try {
       final snapshot = await _database.ref('users/$_userId/budgets').get();
       if (snapshot.exists && snapshot.value != null) {
-        final converted = _convertToMap(snapshot.value) ?? {};
-        return converted.values.map((item) {
-          if (item is Map<String, dynamic>) {
-            return Budget.fromMap(item);
-          }
-          return Budget.fromMap(Map<String, dynamic>.from(item as Map));
-        }).toList();
+        return _parseBudgets(snapshot.value);
       }
       return [];
     } catch (e) {
@@ -93,10 +113,23 @@ class BudgetService {
         return 0;
       }
 
-      final data = snapshot.value as Map<dynamic, dynamic>;
-      final expenses = data.values
-          .map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map)))
-          .toList();
+      final Iterable items;
+      if (snapshot.value is Map) {
+        items = (snapshot.value as Map).values;
+      } else if (snapshot.value is List) {
+        items = (snapshot.value as List).where((e) => e != null);
+      } else {
+        return 0;
+      }
+
+      final expenses = <Expense>[];
+      for (final item in items) {
+        if (item is Map) {
+          try {
+            expenses.add(Expense.fromMap(Map<String, dynamic>.from(item)));
+          } catch (_) {}
+        }
+      }
 
       final now = DateTime.now();
       
@@ -104,7 +137,7 @@ class BudgetService {
       final categoryExpenses = expenses.where((expense) {
         final expenseDate = expense.date;
         final isCurrentMonth = expenseDate.year == now.year && expenseDate.month == now.month;
-        return expense.category == category && isCurrentMonth;
+        return expense.category.toLowerCase() == category.toLowerCase() && isCurrentMonth;
       }).toList();
       
       return categoryExpenses.fold<double>(0, (sum, expense) => sum + expense.amount);
@@ -123,34 +156,19 @@ class BudgetService {
     
     debugPrint('Watching budgets for user: $_userId');
     
-    // Combine budget stream with expense stream to calculate spent amounts
     return _database.ref('users/$_userId/budgets').onValue.asyncMap((budgetEvent) async {
       final val = budgetEvent.snapshot.value;
-      debugPrint('Budgets snapshot value: $val');
-      
       if (val == null) return <Budget>[];
-      if (val is Map) {
-        final converted = _convertToMap(val) ?? {};
-        debugPrint('Converted budgets map: $converted');
-        
-        final budgets = converted.values.map((item) {
-          if (item is Map<String, dynamic>) {
-            return Budget.fromMap(item);
-          }
-          return Budget.fromMap(Map<String, dynamic>.from(item as Map));
-        }).toList();
-        
-        debugPrint('Parsed budgets count: ${budgets.length}');
-        
-        // Calculate spent amounts from expenses for each budget
-        final updatedBudgets = await Future.wait(budgets.map((budget) async {
-          final spent = await _calculateSpentForCategory(budget.category, budget.startDate);
-          return budget.copyWith(spent: spent, updatedAt: DateTime.now());
-        }));
-        
-        return updatedBudgets;
-      }
-      return <Budget>[];
+      
+      final budgets = _parseBudgets(val);
+      
+      // Calculate spent amounts from expenses for each budget
+      final updatedBudgets = await Future.wait(budgets.map((budget) async {
+        final spent = await _calculateSpentForCategory(budget.category, budget.startDate);
+        return budget.copyWith(spent: spent, updatedAt: DateTime.now());
+      }));
+      
+      return updatedBudgets;
     });
   }
 }

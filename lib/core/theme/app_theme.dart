@@ -13,16 +13,13 @@ class AppTheme {
       useMaterial3: true,
 
       // AppBar Theme
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
-        titleTextStyle: TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        actionsIconTheme: const IconThemeData(color: AppColors.textPrimary),
+        titleTextStyle: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
       ),
 
       // Card Theme
@@ -67,8 +64,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.danger, width: 2),
         ),
-        hintStyle: AppTextStyles.bodySmall,
-        labelStyle: AppTextStyles.labelMedium,
+        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+        labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
+        floatingLabelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+        prefixIconColor: AppColors.textSecondary,
+        suffixIconColor: AppColors.textSecondary,
       ),
 
       // Button Themes
@@ -84,7 +84,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8),
           ),
           elevation: 0,
-          textStyle: AppTextStyles.buttonText,
+          textStyle: AppTextStyles.buttonText.copyWith(color: Colors.white),
         ),
       ),
 
@@ -95,7 +95,7 @@ class AppTheme {
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
-          textStyle: AppTextStyles.buttonText,
+          textStyle: AppTextStyles.buttonText.copyWith(color: AppColors.primary),
         ),
       ),
 
@@ -110,8 +110,33 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          textStyle: AppTextStyles.buttonText,
+          textStyle: AppTextStyles.buttonText.copyWith(color: AppColors.textPrimary),
         ),
+      ),
+
+      // Dialog Theme
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titleTextStyle: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+      ),
+
+      // SnackBar Theme
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.surface,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+        actionTextColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+
+      // PopupMenu Theme
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surface,
+        textStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Icon Theme
@@ -130,8 +155,9 @@ class AppTheme {
       // Chip Theme
       chipTheme: ChipThemeData(
         backgroundColor: const Color(0xFF1E293B),
-        selectedColor: AppColors.primary.withOpacity(0.2),
-        labelStyle: AppTextStyles.labelMedium,
+        selectedColor: AppColors.primary.withValues(alpha: 0.2),
+        labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary),
+        secondaryLabelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.xs,
@@ -169,6 +195,10 @@ class AppTheme {
         onSecondary: Colors.white,
         onSurface: AppColors.textPrimary,
         onError: Colors.white,
+        primaryContainer: Color(0xFF1E293B),
+        onPrimaryContainer: Colors.white,
+        surfaceContainer: Color(0xFF1E293B),
+        onSurfaceVariant: AppColors.textSecondary,
       ),
     );
   }

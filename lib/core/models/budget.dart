@@ -50,27 +50,27 @@ class Budget {
   }
 
   factory Budget.fromMap(Map<String, dynamic> map) {
+    DateTime parseDate(dynamic d) {
+      if (d == null) return DateTime.now();
+      if (d is int) return DateTime.fromMillisecondsSinceEpoch(d);
+      return DateTime.tryParse(d.toString()) ?? DateTime.now();
+    }
+
     return Budget(
-      id: map['id'] as String,
-      userId: map['userId'] as String,
-      category: map['category'] as String,
-      amount: safeDouble(map['amount'] ?? map['limit']), // Support both amount and limit for backward compatibility
+      id: map['id']?.toString() ?? '',
+      userId: map['userId']?.toString() ?? '',
+      category: map['category']?.toString() ?? 'Uncategorized',
+      amount: safeDouble(map['amount'] ?? map['limit']),
       spent: safeDouble(map['spent']),
       period: BudgetPeriod.values.firstWhere(
-        (e) => e.name == map['period'],
+        (e) => e.name == map['period']?.toString(),
         orElse: () => BudgetPeriod.monthly,
       ),
       rollover: map['rollover'] as bool? ?? false,
-      startDate: DateTime.parse(map['startDate'] as String),
-      endDate: map['endDate'] != null
-          ? DateTime.parse(map['endDate'] as String)
-          : null,
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'] as String)
-          : null,
-      updatedAt: map['updatedAt'] != null
-          ? DateTime.parse(map['updatedAt'] as String)
-          : null,
+      startDate: parseDate(map['startDate']),
+      endDate: map['endDate'] != null ? parseDate(map['endDate']) : null,
+      createdAt: map['createdAt'] != null ? parseDate(map['createdAt']) : null,
+      updatedAt: map['updatedAt'] != null ? parseDate(map['updatedAt']) : null,
     );
   }
 

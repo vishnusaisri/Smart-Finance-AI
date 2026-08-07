@@ -1,5 +1,3 @@
-import 'dart:math';
-import '../../../core/models/user_profile.dart';
 import '../../../core/models/expense.dart';
 
 class TwinSimulationResult {

@@ -19,7 +19,6 @@ import '../features/budget/screens/budget_screen.dart';
 import '../features/financial_twin/screens/financial_twin_screen.dart';
 import '../core/widgets/global_error_screen.dart';
 import '../features/profile/screens/profile_setup_screen.dart';
-import '../features/profile/screens/profile_screen.dart';
 import '../features/profile/screens/profile_settings_screen.dart';
 import '../features/profile/screens/financial_setup_wizard.dart';
 import '../features/onboarding/screens/onboarding_screen.dart';
@@ -297,22 +296,25 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
       return Scaffold(
         key: _scaffoldKey,
         drawer: MobileDrawer(currentRoute: currentRoute),
-        body: Column(
-          children: [
-            // Mobile TopBar with menu button
-            TopBar(
-              title: _getPageTitle(currentRoute),
-              showSearch: false,
-              showMenuButton: true,
-              onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            ),
-            // Main Content
-            Expanded(
-              child: widget.child,
-            ),
-            // Bottom Navigation
-            BottomNavigation(currentRoute: currentRoute),
-          ],
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // Mobile TopBar with menu button
+              TopBar(
+                title: _getPageTitle(currentRoute),
+                showSearch: false,
+                showMenuButton: true,
+                onMenuPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
+              // Main Content
+              Expanded(
+                child: widget.child,
+              ),
+              // Bottom Navigation
+              BottomNavigation(currentRoute: currentRoute),
+            ],
+          ),
         ),
       );
     }

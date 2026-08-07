@@ -5,8 +5,9 @@ import '../../../core/services/gemini_service.dart';
 import '../../../core/models/expense.dart';
 import '../../../core/models/user_profile.dart';
 import '../../expense/controllers/expense_controller.dart';
-import '../../auth/providers/profile_providers.dart';
+import '../../profile/providers/profile_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/snackbar_utils.dart';
 
 class ChatMessage {
   final String id;
@@ -137,12 +138,12 @@ What would you like to know about your finances today?''',
     }
 
     final userProfile = _ref.read(userProfileProvider);
-    final expenses = _ref.read(expensesProvider);
+    final expensesAsync = _ref.read(expensesProvider);
+    final expenseList = expensesAsync.asData?.value ?? <Expense>[];
 
-    final monthlyIncome = userProfile?.monthlyIncome ?? 0.0;
-    final savingsGoal = userProfile?.savingsGoal ?? 0.0;
-    final expenseList = expenses ?? [];
-    final totalExpenses = expenseList.fold<double>(0, (sum, e) => sum + e.amount);
+    final monthlyIncome = userProfile.monthlyIncome;
+    final savingsGoal = userProfile.savingsGoal;
+    final totalExpenses = expenseList.fold<double>(0.0, (sum, e) => sum + e.amount);
 
     // Determine question type and route to appropriate AI service
     final lowerMessage = message.toLowerCase();
@@ -176,7 +177,7 @@ What would you like to know about your finances today?''',
       // Find top spending category
       final categoryBreakdown = <String, double>{};
       for (final expense in expenseList) {
-        categoryBreakdown[expense.category] = (categoryBreakdown[expense.category] ?? 0) + expense.amount;
+        categoryBreakdown[expense.category] = (categoryBreakdown[expense.category] ?? 0.0) + expense.amount;
       }
       final topCategory = categoryBreakdown.isEmpty
           ? 'None'
@@ -187,8 +188,9 @@ What would you like to know about your finances today?''',
         userContext: {
           'monthlyIncome': monthlyIncome,
           'totalExpenses': totalExpenses,
-          'savingsRate': monthlyIncome > 0 ? (savingsGoal / monthlyIncome) * 100 : 0,
+          'savingsRate': monthlyIncome > 0 ? (savingsGoal / monthlyIncome) * 100 : 0.0,
           'topCategory': topCategory,
+          'healthScore': 75.0,
         },
       );
     }

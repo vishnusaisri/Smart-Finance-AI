@@ -103,6 +103,7 @@ class ChatMessageBubble extends StatelessWidget {
       ),
     ).animate(
       target: message.isLoading ? 0 : 1,
+    ).fadeIn(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );

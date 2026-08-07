@@ -71,10 +71,15 @@ class FinancialOverviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            _formatCurrency(amount),
-            style: AppTextStyles.h2.copyWith(
-              fontWeight: FontWeight.w700,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _formatCurrency(amount),
+              style: AppTextStyles.h2.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),

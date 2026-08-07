@@ -174,7 +174,7 @@ class PredictionsScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           LinearProgressIndicator(
             value: progress / 100,
-            backgroundColor: AppColors.textSecondary.withOpacity(0.2),
+            backgroundColor: AppColors.textSecondary.withValues(alpha: 0.2),
             color: AppColors.accent,
             minHeight: 8,
           ),
@@ -213,16 +213,24 @@ class _PredictionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppTextStyles.labelSmall),
           const SizedBox(height: AppSpacing.xs),
-          Text(value, style: AppTextStyles.h4.copyWith(color: color)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: AppTextStyles.h4.copyWith(color: color),
+              maxLines: 1,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xs),
           Text(subtitle, style: AppTextStyles.bodySmall),
         ],
@@ -247,10 +255,13 @@ class _ForecastRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: AppTextStyles.labelMedium.copyWith(
-            fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         Text(

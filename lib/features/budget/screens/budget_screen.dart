@@ -258,45 +258,47 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: const Text('Create Budget'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: categoryController,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  hintText: 'e.g., Food, Shopping, Entertainment',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: categoryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    hintText: 'e.g., Food, Shopping, Entertainment',
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Budget Amount',
-                  hintText: 'e.g., 50000',
-                  prefixText: '₹',
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Budget Amount',
+                    hintText: 'e.g., 50000',
+                    prefixText: '₹',
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<BudgetPeriod>(
-                value: selectedPeriod,
-                decoration: const InputDecoration(labelText: 'Period'),
-                items: BudgetPeriod.values.map((period) {
-                  return DropdownMenuItem(
-                    value: period,
-                    child: Text(period.name.capitalize()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedPeriod = value;
-                    });
-                  }
-                },
-              ),
-            ],
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<BudgetPeriod>(
+                  value: selectedPeriod,
+                  decoration: const InputDecoration(labelText: 'Period'),
+                  items: BudgetPeriod.values.map((period) {
+                    return DropdownMenuItem(
+                      value: period,
+                      child: Text(period.name.capitalize()),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedPeriod = value;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -348,41 +350,43 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: const Text('Edit Budget'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Budget Amount',
-                  prefixText: '₹',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: categoryController,
+                  decoration: const InputDecoration(labelText: 'Category'),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<BudgetPeriod>(
-                value: selectedPeriod,
-                decoration: const InputDecoration(labelText: 'Period'),
-                items: BudgetPeriod.values.map((period) {
-                  return DropdownMenuItem(
-                    value: period,
-                    child: Text(period.name.capitalize()),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedPeriod = value;
-                    });
-                  }
-                },
-              ),
-            ],
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Budget Amount',
+                    prefixText: '₹',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<BudgetPeriod>(
+                  value: selectedPeriod,
+                  decoration: const InputDecoration(labelText: 'Period'),
+                  items: BudgetPeriod.values.map((period) {
+                    return DropdownMenuItem(
+                      value: period,
+                      child: Text(period.name.capitalize()),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedPeriod = value;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

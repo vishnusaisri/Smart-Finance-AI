@@ -45,22 +45,24 @@ class Expense {
   }
 
   factory Expense.fromMap(Map<String, dynamic> map) {
+    DateTime parseDate(dynamic d) {
+      if (d == null) return DateTime.now();
+      if (d is int) return DateTime.fromMillisecondsSinceEpoch(d);
+      return DateTime.tryParse(d.toString()) ?? DateTime.now();
+    }
+
     return Expense(
-      id: map['id'] as String,
-      userId: map['userId'] as String,
+      id: map['id']?.toString() ?? '',
+      userId: map['userId']?.toString() ?? '',
       amount: safeDouble(map['amount']),
-      category: map['category'] as String,
-      description: map['description'] as String? ?? '',
-      date: DateTime.parse(map['date'] as String),
-      receiptUrl: map['receiptUrl'] as String?,
-      metadata: map['metadata'] as Map<String, dynamic>?,
+      category: map['category']?.toString() ?? 'Uncategorized',
+      description: map['description']?.toString() ?? '',
+      date: parseDate(map['date']),
+      receiptUrl: map['receiptUrl']?.toString(),
+      metadata: map['metadata'] is Map ? Map<String, dynamic>.from(map['metadata'] as Map) : null,
       isImpulse: map['isImpulse'] as bool? ?? false,
-      createdAt: map['createdAt'] != null 
-          ? DateTime.parse(map['createdAt'] as String) 
-          : null,
-      updatedAt: map['updatedAt'] != null 
-          ? DateTime.parse(map['updatedAt'] as String) 
-          : null,
+      createdAt: map['createdAt'] != null ? parseDate(map['createdAt']) : null,
+      updatedAt: map['updatedAt'] != null ? parseDate(map['updatedAt']) : null,
     );
   }
 

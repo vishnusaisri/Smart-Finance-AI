@@ -216,7 +216,7 @@ class _SettingsSectionState extends ConsumerState<SettingsSection> {
             ? Switch(
                 value: toggleValue,
                 onChanged: (newValue) => onTap(),
-                activeColor: Colors.blue,
+                activeThumbColor: Colors.blue,
               )
             : Text(
                 value,
@@ -250,7 +250,7 @@ class _SettingsSectionState extends ConsumerState<SettingsSection> {
         ),
         value: value,
         onChanged: onChanged,
-        activeColor: Colors.blue,
+        activeThumbColor: Colors.blue,
       ),
     );
   }

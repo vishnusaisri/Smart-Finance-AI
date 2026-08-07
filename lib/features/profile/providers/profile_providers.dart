@@ -318,3 +318,73 @@ final availableLocalesProvider =
     ];
   },
 );
+
+// Personal Info Form Notifier
+class PersonalInfoFormNotifier extends Notifier<Map<String, String?>> {
+  @override
+  Map<String, String?> build() {
+    final profile = ref.watch(userProfileProvider);
+    return {
+      'name': profile.name,
+      'email': profile.email,
+      'nameError': null,
+      'emailError': null,
+    };
+  }
+
+  void updateName(String name) {
+    state = {...state, 'name': name, 'nameError': null};
+  }
+
+  void updateEmail(String email) {
+    state = {...state, 'email': email, 'emailError': null};
+  }
+
+  Map<String, String> getFormData() {
+    final profile = ref.read(userProfileProvider);
+    return {
+      'name': state['name'] ?? profile.name,
+      'email': state['email'] ?? profile.email,
+    };
+  }
+}
+
+final personalInfoFormProvider = NotifierProvider<PersonalInfoFormNotifier, Map<String, String?>>(() {
+  return PersonalInfoFormNotifier();
+});
+
+// Financial Goals Form Notifier
+class FinancialGoalsFormNotifier extends Notifier<Map<String, String?>> {
+  @override
+  Map<String, String?> build() {
+    final profile = ref.watch(userProfileProvider);
+    return {
+      'monthlyIncome': profile.monthlyIncome.toString(),
+      'savingsGoal': profile.savingsGoal.toString(),
+      'monthlyIncomeError': null,
+      'savingsGoalError': null,
+    };
+  }
+
+  void updateMonthlyIncome(String income) {
+    state = {...state, 'monthlyIncome': income, 'monthlyIncomeError': null};
+  }
+
+  void updateSavingsGoal(String goal) {
+    state = {...state, 'savingsGoal': goal, 'savingsGoalError': null};
+  }
+
+  Map<String, double> getFormData() {
+    final profile = ref.read(userProfileProvider);
+    final income = double.tryParse(state['monthlyIncome'] ?? '') ?? profile.monthlyIncome;
+    final savings = double.tryParse(state['savingsGoal'] ?? '') ?? profile.savingsGoal;
+    return {
+      'monthlyIncome': income,
+      'savingsGoal': savings,
+    };
+  }
+}
+
+final financialGoalsFormProvider = NotifierProvider<FinancialGoalsFormNotifier, Map<String, String?>>(() {
+  return FinancialGoalsFormNotifier();
+});

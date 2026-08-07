@@ -26,7 +26,7 @@ class ExpenseFilterBar extends ConsumerWidget {
               label: 'All',
               isSelected: filter.category == null,
               onTap: () {
-                ref.read(expenseFilterControllerProvider).reset();
+                ref.read(expenseFilterControllerProvider.notifier).reset();
               },
             ),
           ),
@@ -40,7 +40,7 @@ class ExpenseFilterBar extends ConsumerWidget {
                 color: category.color,
                 isSelected: filter.category == category.name,
                 onTap: () {
-                  ref.read(expenseFilterControllerProvider).update(ExpenseFilter(
+                  ref.read(expenseFilterControllerProvider.notifier).updateFilter(ExpenseFilter(
                     category: category.name,
                   ));
                 },

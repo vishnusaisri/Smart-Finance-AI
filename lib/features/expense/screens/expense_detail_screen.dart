@@ -49,13 +49,13 @@ class ExpenseDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ExpenseDetailContent extends StatelessWidget {
+class _ExpenseDetailContent extends ConsumerWidget {
   final Expense expense;
 
   const _ExpenseDetailContent({required this.expense});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final categoryColor = ExpenseCategoryService.getCategoryColor(expense.category);
     final categoryIcon = ExpenseCategoryService.getCategoryIcon(expense.category);
 
@@ -168,7 +168,7 @@ class _ExpenseDetailContent extends StatelessWidget {
                   icon: Icons.delete,
                   type: ButtonType.danger,
                   onPressed: () {
-                    _showDeleteDialog(context, expense);
+                    _showDeleteDialog(context, ref, expense);
                   },
                   fullWidth: true,
                 ),
@@ -180,7 +180,7 @@ class _ExpenseDetailContent extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, Expense expense) {
+  void _showDeleteDialog(BuildContext context, WidgetRef ref, Expense expense) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -193,7 +193,7 @@ class _ExpenseDetailContent extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              // Delete expense
+              ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
               context.pop();
               context.pop();
             },
