@@ -75,15 +75,27 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
 
+      - name: Check Pages API Availability
+        id: check_pages
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/pages)
+          echo "Pages API HTTP status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "enabled=true" >> $GITHUB_OUTPUT
+          else
+            echo "enabled=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Native GitHub Pages API is not enabled yet in repo settings. Branch deployment (gh-pages) was used."
+          fi
+
       - name: Upload GitHub Pages Artifact
+        if: steps.check_pages.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v3
-        continue-on-error: true
         with:
           path: dist
 
       - name: Deploy to GitHub Pages (Actions Native Mode)
+        if: steps.check_pages.outputs.enabled == 'true'
         id: deployment
-        continue-on-error: true
         uses: actions/deploy-pages@v4
 
       - name: Generate GitHub Step Summary
