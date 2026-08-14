@@ -123,7 +123,7 @@ jobs:
           echo "| **GitHub Run** | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 📊 Test Reports & Excel Sheets:" >> $GITHUB_STEP_SUMMARY
-          echo "- 📥 **Excel Spreadsheet Report (.xlsx)**: Available under **Artifacts** tab (`web-e2e-test-reports-excel-and-html`)" >> $GITHUB_STEP_SUMMARY
-          echo "- 📊 **Excel Download Link**: [Download excel-report.xlsx](${{ steps.deployment.outputs.page_url }}reports/latest/excel-report.xlsx)" >> $GITHUB_STEP_SUMMARY
-          echo "- 🌐 **Latest Execution HTML Report**: [View Live HTML Report](${{ steps.deployment.outputs.page_url }}reports/latest/execution-report.html)" >> $GITHUB_STEP_SUMMARY
-          echo "- 📜 **Build History Report**: [View Build #${{ github.run_number }} Report](${{ steps.deployment.outputs.page_url }}reports/history/build-${{ github.run_number }}/execution-report.html)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📥 **Excel Spreadsheet (.xlsx)**: Downloadable under **Artifacts** section at bottom of this run (`web-e2e-test-reports-excel-and-html`)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Direct Excel Download**: [https://vishnusaisri.github.io/Smart-Finance-AI/reports/latest/excel-report.xlsx](https://vishnusaisri.github.io/Smart-Finance-AI/reports/latest/excel-report.xlsx)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 **Live Execution HTML Report**: [https://vishnusaisri.github.io/Smart-Finance-AI/reports/latest/execution-report.html](https://vishnusaisri.github.io/Smart-Finance-AI/reports/latest/execution-report.html)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📜 **Build History Report**: [https://vishnusaisri.github.io/Smart-Finance-AI/reports/history/build-${{ github.run_number }}/execution-report.html](https://vishnusaisri.github.io/Smart-Finance-AI/reports/history/build-${{ github.run_number }}/execution-report.html)" >> $GITHUB_STEP_SUMMARY
