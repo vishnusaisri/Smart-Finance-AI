@@ -28,10 +28,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
@@ -52,7 +52,7 @@ jobs:
 
       - name: Install Appium & E2E Node Dependencies
         run: |
-          npm install -g appium@2.5.1
+          npm install -g appium
           appium driver install uiautomator2 || true
           cd "Smart Finance AI Appium"
           npm ci || npm install

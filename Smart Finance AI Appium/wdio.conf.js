@@ -23,10 +23,11 @@ exports.config = {
   logLevel: 'warn',
   bail: 0,
   baseUrl: 'http://localhost',
+  port: 4723,
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 3,
-  services: ['appium'],
+  services: [],
   framework: 'mocha',
   reporters: ['spec'],
   mochaOpts: {
