@@ -12,6 +12,7 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType? keyboardType;
   final Widget? prefixIcon;
+  final String? prefixText;
   final Widget? suffixIcon;
   final int? maxLines;
   final int? maxLength;
@@ -32,6 +33,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.keyboardType,
     this.prefixIcon,
+    this.prefixText,
     this.suffixIcon,
     this.maxLines = 1,
     this.maxLength,
@@ -46,6 +48,10 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final secondaryTextColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -53,10 +59,10 @@ class CustomTextField extends StatelessWidget {
           Text(
             label!,
             style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: secondaryTextColor,
             ),
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
         ],
         TextFormField(
           controller: controller,
@@ -72,12 +78,14 @@ class CustomTextField extends StatelessWidget {
           inputFormatters: inputFormatters,
           focusNode: focusNode,
           textInputAction: textInputAction,
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+          style: AppTextStyles.bodyMedium.copyWith(color: primaryTextColor),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-            labelStyle: AppTextStyles.labelMedium.copyWith(color: AppColors.textSecondary),
+            hintStyle: AppTextStyles.bodyMedium.copyWith(color: secondaryTextColor),
+            labelStyle: AppTextStyles.labelMedium.copyWith(color: secondaryTextColor),
             prefixIcon: prefixIcon,
+            prefixText: prefixText,
+            prefixStyle: AppTextStyles.bodyMedium.copyWith(color: primaryTextColor, fontWeight: FontWeight.bold),
             suffixIcon: suffixIcon,
             contentPadding: EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,

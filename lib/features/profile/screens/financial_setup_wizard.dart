@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -90,6 +91,22 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
     super.dispose();
   }
 
+  bool _isValidEmail(String email) {
+    final trimmed = email.trim();
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.([a-zA-Z]{2,6})$');
+    final match = emailRegex.firstMatch(trimmed);
+    if (match == null) return false;
+    final tld = match.group(1)?.toLowerCase() ?? '';
+    if (tld == 'co') return false;
+    return true;
+  }
+
+  bool _isValidPositiveNumber(String value) {
+    if (value.trim().isEmpty) return false;
+    final num = double.tryParse(value.trim());
+    return num != null && num > 0;
+  }
+
   void _nextStep() {
     if (_currentStep < 6) {
       _pageController.nextPage(
@@ -125,11 +142,11 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
 
     try {
       final auth = FirebaseAuth.instance.currentUser;
-      final monthlyIncome = double.tryParse(_monthlyIncomeController.text) ?? 0.0;
-      final savingsGoal = double.tryParse(_savingsGoalController.text) ?? 0.0;
-      final monthlyBudget = double.tryParse(_monthlyBudgetController.text) ?? 0.0;
-      final emergencyFund = double.tryParse(_emergencyFundController.text) ?? 0.0;
-      final debtAmount = double.tryParse(_debtAmountController.text) ?? 0.0;
+      final monthlyIncome = double.tryParse(_monthlyIncomeController.text.trim()) ?? 0.0;
+      final savingsGoal = double.tryParse(_savingsGoalController.text.trim()) ?? 0.0;
+      final monthlyBudget = double.tryParse(_monthlyBudgetController.text.trim()) ?? 0.0;
+      final emergencyFund = double.tryParse(_emergencyFundController.text.trim()) ?? 0.0;
+      final debtAmount = double.tryParse(_debtAmountController.text.trim()) ?? 0.0;
 
       // Create financial goals
       final goals = _selectedGoals.map((goal) => FinancialGoal(
@@ -208,11 +225,15 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
   bool _validateCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return _fullNameController.text.isNotEmpty && _emailController.text.isNotEmpty;
+        return _fullNameController.text.trim().length >= 2 &&
+            _isValidEmail(_emailController.text);
       case 1:
-        return _monthlyIncomeController.text.isNotEmpty && 
-               _savingsGoalController.text.isNotEmpty &&
-               _monthlyBudgetController.text.isNotEmpty;
+        final income = double.tryParse(_monthlyIncomeController.text.trim());
+        final savings = double.tryParse(_savingsGoalController.text.trim());
+        return _isValidPositiveNumber(_monthlyIncomeController.text) &&
+            _isValidPositiveNumber(_savingsGoalController.text) &&
+            _isValidPositiveNumber(_monthlyBudgetController.text) &&
+            income != null && savings != null && savings <= income;
       case 2:
         return _selectedGoals.isNotEmpty;
       case 3:
@@ -220,12 +241,12 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
       case 4:
         return true;
       case 5:
-        if (_debtStatus != 'None' && _debtStatus != 'Low') {
-          return _debtAmountController.text.isNotEmpty;
+        if (_debtStatus != 'None') {
+          return _isValidPositiveNumber(_debtAmountController.text);
         }
         return true;
       case 6:
-        return true;
+        return _isValidPositiveNumber(_emergencyFundController.text);
       default:
         return true;
     }
@@ -302,6 +323,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
   }
 
   Widget _buildNavigationButtons() {
+    final isValid = _validateCurrentStep();
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Row(
@@ -319,7 +341,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
           Expanded(
             child: CustomButton(
               text: _currentStep == 6 ? 'Complete Setup' : 'Next',
-              onPressed: _validateCurrentStep() ? _nextStep : null,
+              onPressed: isValid ? _nextStep : null,
               fullWidth: true,
               isLoading: _isLoading,
             ),
@@ -339,20 +361,24 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
           hint: 'Enter your full name',
           controller: _fullNameController,
           prefixIcon: const Icon(Icons.person),
+          onChanged: (_) => setState(() {}),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Required field';
+            if (value == null || value.trim().isEmpty) return 'Full name is required';
+            if (value.trim().length < 2) return 'Name must be at least 2 characters';
             return null;
           },
         ),
         const SizedBox(height: AppSpacing.lg),
         CustomTextField(
           label: 'Email',
-          hint: 'Enter your email',
+          hint: 'Enter your email (e.g. name@example.com)',
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           prefixIcon: const Icon(Icons.email),
+          onChanged: (_) => setState(() {}),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Required field';
+            if (value == null || value.trim().isEmpty) return 'Email is required';
+            if (!_isValidEmail(value)) return 'Please enter a valid email address';
             return null;
           },
         ),
@@ -370,10 +396,13 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
           hint: 'e.g., 50000',
           controller: _monthlyIncomeController,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           prefixIcon: const Icon(Icons.account_balance_wallet),
+          onChanged: (_) => setState(() {}),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Required field';
-            if (double.tryParse(value) == null) return 'Must be a number';
+            if (value == null || value.trim().isEmpty) return 'Monthly income is required';
+            final val = double.tryParse(value.trim());
+            if (val == null || val <= 0) return 'Amount is not valid';
             return null;
           },
         ),
@@ -383,10 +412,15 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
           hint: 'e.g., 10000',
           controller: _savingsGoalController,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           prefixIcon: const Icon(Icons.savings),
+          onChanged: (_) => setState(() {}),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Required field';
-            if (double.tryParse(value) == null) return 'Must be a number';
+            if (value == null || value.trim().isEmpty) return 'Savings goal is required';
+            final val = double.tryParse(value.trim());
+            if (val == null || val <= 0) return 'Amount is not valid';
+            final income = double.tryParse(_monthlyIncomeController.text.trim()) ?? 0;
+            if (income > 0 && val > income) return 'Savings goal cannot exceed monthly income';
             return null;
           },
         ),
@@ -396,10 +430,13 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
           hint: 'e.g., 40000',
           controller: _monthlyBudgetController,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           prefixIcon: const Icon(Icons.account_balance_wallet),
+          onChanged: (_) => setState(() {}),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Required field';
-            if (double.tryParse(value) == null) return 'Must be a number';
+            if (value == null || value.trim().isEmpty) return 'Monthly budget is required';
+            final val = double.tryParse(value.trim());
+            if (val == null || val <= 0) return 'Amount is not valid';
             return null;
           },
         ),
@@ -581,7 +618,7 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
             activeColor: AppColors.primary,
           );
         }),
-        if (_debtStatus == 'Medium' || _debtStatus == 'High')
+        if (_debtStatus != 'None')
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.lg),
             child: CustomTextField(
@@ -589,11 +626,14 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
               hint: 'e.g., 500000',
               controller: _debtAmountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               prefixIcon: const Icon(Icons.account_balance),
+              onChanged: (_) => setState(() {}),
               validator: (value) {
-                if (_debtStatus == 'Medium' || _debtStatus == 'High') {
-                  if (value == null || value.isEmpty) return 'Required field';
-                  if (double.tryParse(value) == null) return 'Must be a number';
+                if (_debtStatus != 'None') {
+                  if (value == null || value.trim().isEmpty) return 'Debt amount is required';
+                  final val = double.tryParse(value.trim());
+                  if (val == null || val <= 0) return 'Amount is not valid';
                 }
                 return null;
               },
@@ -618,10 +658,13 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
           hint: 'e.g., 150000',
           controller: _emergencyFundController,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           prefixIcon: const Icon(Icons.health_and_safety),
+          onChanged: (_) => setState(() {}),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Required field';
-            if (double.tryParse(value) == null) return 'Must be a number';
+            if (value == null || value.trim().isEmpty) return 'Emergency fund target is required';
+            final val = double.tryParse(value.trim());
+            if (val == null || val <= 0) return 'Amount is not valid';
             return null;
           },
         ),
@@ -662,21 +705,24 @@ class _FinancialSetupWizardState extends ConsumerState<FinancialSetupWizard> {
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppTextStyles.h3,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            description,
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade400),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          ...children,
-        ],
+      child: Form(
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppTextStyles.h3,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              description,
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey.shade400),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            ...children,
+          ],
+        ),
       ),
     );
   }

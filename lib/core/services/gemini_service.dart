@@ -287,7 +287,7 @@ Keep it encouraging, specific, and actionable.
     required Map<String, dynamic> userContext,
   }) async {
     if (isMock) {
-      return _generateMockAnswer(question);
+      return _generateMockAnswer(question, userContext);
     }
 
     try {
@@ -313,7 +313,7 @@ INSTRUCTIONS:
 
       final content = [Content.text(prompt)];
       final response = await _model!.generateContent(content);
-      return response.text ?? _generateMockAnswer(question);
+      return response.text ?? _generateMockAnswer(question, userContext);
     } catch (e, st) {
       print('Gemini answerFinancialQuestion Error: $e');
       print(st);
@@ -449,6 +449,30 @@ Example:
     required double healthScore,
   }) {
     final insights = <AIInsight>[];
+    const symbol = '₹';
+
+    if (totalExpenses == 0) {
+      insights.add(AIInsight(
+        id: 'welcome-1',
+        userId: 'current-user',
+        title: 'Welcome to Smart Finance AI!',
+        description: 'Your monthly income is set to $symbol${monthlyIncome.toStringAsFixed(0)}.',
+        type: InsightType.info,
+        timestamp: DateTime.now(),
+      ));
+
+      insights.add(AIInsight(
+        id: 'welcome-2',
+        userId: 'current-user',
+        title: 'Start Expense Tracking',
+        description: 'Add your daily expenses to unlock real-time financial health analytics and AI recommendations.',
+        type: InsightType.tip,
+        timestamp: DateTime.now(),
+      ));
+
+      return insights;
+    }
+
     final topCategory = topCategories.entries.isNotEmpty ? topCategories.entries.first : null;
     final topCategoryName = topCategory?.key ?? 'Uncategorized';
     final topCategoryAmount = topCategory?.value ?? 0.0;
@@ -460,7 +484,7 @@ Example:
         id: 'mock-1',
         userId: 'current-user',
         title: 'High $topCategoryName Spending',
-        description: '$topCategoryName at \$${topCategoryAmount.toStringAsFixed(0)} is ${categoryPercentage.toStringAsFixed(0)}% of income. Consider reducing by 10% to save \$${(topCategoryAmount * 0.1).toStringAsFixed(0)}/month.',
+        description: '$topCategoryName at $symbol${topCategoryAmount.toStringAsFixed(0)} is ${categoryPercentage.toStringAsFixed(0)}% of income. Consider reducing by 10% to save $symbol${(topCategoryAmount * 0.1).toStringAsFixed(0)}/month.',
         type: InsightType.warning,
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
       ));
@@ -481,7 +505,7 @@ Example:
         id: 'mock-2',
         userId: 'current-user',
         title: 'Low Savings Rate',
-        description: 'Your ${savingsRate.toStringAsFixed(1)}% savings rate is below recommended 20%. Aim to save at least \$${(monthlyIncome * 0.2).toStringAsFixed(0)}/month.',
+        description: 'Your ${savingsRate.toStringAsFixed(1)}% savings rate is below recommended 20%. Aim to save at least $symbol${(monthlyIncome * 0.2).toStringAsFixed(0)}/month.',
         type: InsightType.alert,
         timestamp: DateTime.now().subtract(const Duration(hours: 5)),
       ));
@@ -514,7 +538,7 @@ Example:
         id: 'mock-4',
         userId: 'current-user',
         title: 'Investment Opportunity',
-        description: 'With your ${savingsRate.toStringAsFixed(1)}% savings rate, you could invest \$${(monthlyIncome * savingsRate / 100).toStringAsFixed(0)}/month in index funds.',
+        description: 'With your ${savingsRate.toStringAsFixed(1)}% savings rate, you could invest $symbol${(monthlyIncome * savingsRate / 100).toStringAsFixed(0)}/month in index funds.',
         type: InsightType.opportunity,
         timestamp: DateTime.now().subtract(const Duration(days: 1)),
       ));
@@ -544,11 +568,33 @@ Example:
   }
 
   /// Generate mock answer
-  String _generateMockAnswer(String question) {
+  String _generateMockAnswer(String question, [Map<String, dynamic>? userContext]) {
     final intent = AIIntentAnalyzer.analyze(question);
     if (intent.response != null) {
       return intent.response!;
     }
+
+    if (userContext != null) {
+      final symbol = userContext['currencySymbol']?.toString() ?? '₹';
+      final income = (userContext['monthlyIncome'] as num?)?.toDouble() ?? 0.0;
+      final expenses = (userContext['totalExpenses'] as num?)?.toDouble() ?? 0.0;
+      final savingsRate = (userContext['savingsRate'] as num?)?.toDouble() ?? 0.0;
+      final topCategory = userContext['topCategory']?.toString() ?? 'Expenses';
+      final healthScore = (userContext['healthScore'] as num?)?.toDouble() ?? 50.0;
+      final netSavings = (income - expenses).clamp(0.0, double.infinity);
+
+      final lowerQ = question.toLowerCase();
+      if (lowerQ.contains('budget') || lowerQ.contains('spend')) {
+        return 'Based on your data, your monthly spending is $symbol${expenses.toStringAsFixed(0)} out of $symbol${income.toStringAsFixed(0)} income. Your highest spending category is $topCategory. We recommend capping $topCategory to save an additional $symbol${(expenses * 0.15).toStringAsFixed(0)} per month.';
+      } else if (lowerQ.contains('save') || lowerQ.contains('savings')) {
+        return 'Your current net monthly savings is $symbol${netSavings.toStringAsFixed(0)} (${savingsRate.toStringAsFixed(1)}% savings rate). To boost your savings, consider automating a monthly transfer of $symbol${(income * 0.20).toStringAsFixed(0)} (20% of income) right after payday.';
+      } else if (lowerQ.contains('health') || lowerQ.contains('score')) {
+        return 'Your financial health score is ${healthScore.toStringAsFixed(0)}/100. Maintaining a savings rate above 20% and keeping $topCategory spending controlled will elevate your score to 85+.';
+      } else {
+        return 'Based on your monthly income of $symbol${income.toStringAsFixed(0)} and total expenses of $symbol${expenses.toStringAsFixed(0)}, your current net savings is $symbol${netSavings.toStringAsFixed(0)} (${savingsRate.toStringAsFixed(1)}% savings rate). Top area for optimization: $topCategory.';
+      }
+    }
+
     return 'Based on your financial data, I recommend focusing on reducing discretionary spending by 15% and increasing your emergency fund to cover 6 months of expenses. Would you like specific recommendations for your top spending categories?';
   }
 }

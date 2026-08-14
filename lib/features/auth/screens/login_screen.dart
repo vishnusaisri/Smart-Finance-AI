@@ -153,21 +153,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   validator: (value) => ValidationUtils.validatePassword(value, requireCurrent: true),
                 ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Forgot Password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      context.push(RouteNames.forgotPassword);
-                    },
-                    child: Text(
-                      AppStrings.forgotPassword,
-                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: AppSpacing.xl),
 
                 // Login Button
@@ -183,9 +168,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '${AppStrings.dontHaveAccount} ',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    Builder(
+                      builder: (context) {
+                        final isDark = Theme.of(context).brightness == Brightness.dark;
+                        return Text(
+                          '${AppStrings.dontHaveAccount} ',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        );
+                      },
                     ),
                     TextButton(
                       onPressed: () {

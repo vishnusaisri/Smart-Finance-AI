@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/utils/validation_utils.dart';
-import '../../../core/widgets/glass_card.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../profile/providers/profile_providers.dart';
 
-class MonthlyTrendChart extends StatelessWidget {
+class MonthlyTrendChart extends ConsumerWidget {
   final List<Map<String, dynamic>> data;
 
   const MonthlyTrendChart({
@@ -15,10 +15,21 @@ class MonthlyTrendChart extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (data.isEmpty) {
-      return const Center(child: Text('No data available'));
+      return const SizedBox(
+        height: 180,
+        child: Center(
+          child: Text(
+            'No data available',
+            style: TextStyle(color: Colors.white54, fontSize: 16),
+          ),
+        ),
+      );
     }
+
+    final userProfile = ref.watch(userProfileProvider);
+    final symbol = userProfile.getCurrencySymbol();
 
     return SizedBox(
       height: 250,
@@ -67,7 +78,7 @@ class MonthlyTrendChart extends StatelessWidget {
                 interval: 1000,
                 getTitlesWidget: (value, meta) {
                   return Text(
-                    '\$${(value / 1000).toStringAsFixed(0)}k',
+                    '$symbol${(value / 1000).toStringAsFixed(0)}k',
                     style: AppTextStyles.caption,
                   );
                 },

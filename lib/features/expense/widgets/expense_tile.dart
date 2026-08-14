@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/expense.dart';
@@ -7,9 +8,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../services/expense_category_service.dart';
-import '../../../routes/app_routes.dart';
+import '../../profile/providers/profile_providers.dart';
 
-class ExpenseTile extends StatelessWidget {
+class ExpenseTile extends ConsumerWidget {
   final Expense expense;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -22,7 +23,9 @@ class ExpenseTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfile = ref.watch(userProfileProvider);
+    final symbol = userProfile.getCurrencySymbol();
     final categoryColor = ExpenseCategoryService.getCategoryColor(expense.category);
     final categoryIcon = ExpenseCategoryService.getCategoryIcon(expense.category);
 
@@ -116,7 +119,7 @@ class ExpenseTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '-\$${expense.amount.toStringAsFixed(2)}',
+                '-$symbol${expense.amount.toStringAsFixed(2)}',
                 style: AppTextStyles.labelLarge.copyWith(
                   color: AppColors.danger,
                   fontWeight: FontWeight.w600,

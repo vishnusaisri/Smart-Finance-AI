@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../profile/providers/profile_providers.dart';
 
-class ExpenseSummaryCard extends StatelessWidget {
+class ExpenseSummaryCard extends ConsumerWidget {
   final double totalExpenses;
   final int transactionCount;
   final double averageExpense;
@@ -19,7 +21,10 @@ class ExpenseSummaryCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfile = ref.watch(userProfileProvider);
+    final symbol = userProfile.getCurrencySymbol();
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +41,7 @@ class ExpenseSummaryCard extends StatelessWidget {
             children: [
               _StatItem(
                 label: 'Total',
-                value: '\$${totalExpenses.toStringAsFixed(2)}',
+                value: '$symbol${totalExpenses.toStringAsFixed(2)}',
                 color: AppColors.danger,
               ),
               _StatItem(
@@ -46,7 +51,7 @@ class ExpenseSummaryCard extends StatelessWidget {
               ),
               _StatItem(
                 label: 'Average',
-                value: '\$${averageExpense.toStringAsFixed(2)}',
+                value: '$symbol${averageExpense.toStringAsFixed(2)}',
                 color: AppColors.accent,
               ),
             ],

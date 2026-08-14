@@ -58,21 +58,23 @@ class PredictionsScreen extends ConsumerWidget {
 
     final totalExpenses = expenses.fold<double>(0, (sum, e) => sum + e.amount);
     final monthlyIncome = userProfile.monthlyIncome;
-    final savingsRate = monthlyIncome > 0 ? ((monthlyIncome - totalExpenses) / monthlyIncome) * 100 : 0.0;
+    final netMonthlySavings = (monthlyIncome - totalExpenses).clamp(0.0, double.infinity);
+    final savingsRate = monthlyIncome > 0 ? (netMonthlySavings / monthlyIncome) * 100 : 0.0;
+    final currencySymbol = userProfile.getCurrencySymbol();
 
     return Column(
       children: [
-        _buildSavingsPrediction(savingsRate, monthlyIncome),
+        _buildSavingsPrediction(savingsRate, monthlyIncome, netMonthlySavings, currencySymbol),
         const SizedBox(height: AppSpacing.xl),
-        _buildSpendingForecast(expenses),
+        _buildSpendingForecast(expenses, currencySymbol),
         const SizedBox(height: AppSpacing.xl),
-        _buildGoalPrediction(userProfile.savingsGoal, totalExpenses),
+        _buildGoalPrediction(userProfile.savingsGoal, netMonthlySavings, currencySymbol),
       ],
     );
   }
 
-  Widget _buildSavingsPrediction(double savingsRate, double monthlyIncome) {
-    final projectedAnnualSavings = (monthlyIncome * (savingsRate / 100)) * 12;
+  Widget _buildSavingsPrediction(double savingsRate, double monthlyIncome, double netMonthlySavings, String currencySymbol) {
+    final projectedAnnualSavings = netMonthlySavings * 12;
     final isPositive = savingsRate >= 20;
 
     return GlassCard(
@@ -104,7 +106,7 @@ class PredictionsScreen extends ConsumerWidget {
               Expanded(
                 child: _PredictionCard(
                   label: 'Annual Savings',
-                  value: '₹${projectedAnnualSavings.toStringAsFixed(0)}',
+                  value: '$currencySymbol${projectedAnnualSavings.toStringAsFixed(0)}',
                   subtitle: 'projected',
                   color: AppColors.primary,
                 ),
@@ -116,48 +118,62 @@ class PredictionsScreen extends ConsumerWidget {
     ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildSpendingForecast(List<dynamic> expenses) {
-    final monthlyTotal = expenses.fold<double>(0, (sum, e) => sum + e.amount);
-    final projectedMonthly = monthlyTotal * 1.05; // 5% inflation estimate
+  Widget _buildSpendingForecast(List<dynamic> expenses, String currencySymbol) {
+    final now = DateTime.now();
+    final currentMonthExpenses = expenses
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    
+    // Monthly history calculation
+    final monthlyTotals = <String, double>{};
+    for (final expense in expenses) {
+      final key = '${expense.date.year}-${expense.date.month.toString().padLeft(2, '0')}';
+      monthlyTotals[key] = (monthlyTotals[key] ?? 0) + expense.amount;
+    }
+    
+    final averageMonthly = monthlyTotals.isNotEmpty
+        ? monthlyTotals.values.fold<double>(0, (a, b) => a + b) / monthlyTotals.length
+        : currentMonthExpenses;
+
+    final nextMonthEst = averageMonthly > 0 ? averageMonthly : currentMonthExpenses;
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-      Row(
-        children: [
-          Icon(Icons.show_chart, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Text('Spending Forecast', style: AppTextStyles.h5),
+          Row(
+            children: [
+              Icon(Icons.show_chart, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Spending Forecast', style: AppTextStyles.h5),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _ForecastRow(
+            label: 'This Month',
+            value: '$currencySymbol${currentMonthExpenses.toStringAsFixed(0)}',
+            isCurrent: true,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ForecastRow(
+            label: 'Next Month (Est.)',
+            value: '$currencySymbol${nextMonthEst.toStringAsFixed(0)}',
+            isCurrent: false,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ForecastRow(
+            label: '6 Months (Est.)',
+            value: '$currencySymbol${(nextMonthEst * 6).toStringAsFixed(0)}',
+            isCurrent: false,
+          ),
         ],
       ),
-      const SizedBox(height: AppSpacing.lg),
-      _ForecastRow(
-        label: 'This Month',
-        value: '₹${monthlyTotal.toStringAsFixed(0)}',
-        isCurrent: true,
-      ),
-      const SizedBox(height: AppSpacing.sm),
-      _ForecastRow(
-        label: 'Next Month (Est.)',
-        value: '₹${projectedMonthly.toStringAsFixed(0)}',
-        isCurrent: false,
-      ),
-      const SizedBox(height: AppSpacing.sm),
-      _ForecastRow(
-        label: '6 Months (Est.)',
-        value: '₹${(projectedMonthly * 6).toStringAsFixed(0)}',
-        isCurrent: false,
-      ),
-    ],
-  ),
-).animate().fadeIn(delay: 300.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(delay: 300.ms, duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildGoalPrediction(double savingsGoal, double currentSavings) {
-    final progress = savingsGoal > 0 ? (currentSavings / savingsGoal) * 100 : 0;
-    final monthsToGoal = savingsGoal > 0 && currentSavings < savingsGoal 
-        ? ((savingsGoal - currentSavings) / (currentSavings / 12)).ceil() 
+  Widget _buildGoalPrediction(double savingsGoal, double netMonthlySavings, String currencySymbol) {
+    final monthsToGoal = (savingsGoal > 0 && netMonthlySavings > 0)
+        ? (savingsGoal / netMonthlySavings).ceil()
         : 0;
 
     return GlassCard(
@@ -173,7 +189,7 @@ class PredictionsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           LinearProgressIndicator(
-            value: progress / 100,
+            value: savingsGoal > 0 ? (netMonthlySavings / savingsGoal).clamp(0.0, 1.0) : 0,
             backgroundColor: AppColors.textSecondary.withValues(alpha: 0.2),
             color: AppColors.accent,
             minHeight: 8,
@@ -182,11 +198,13 @@ class PredictionsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${progress.toStringAsFixed(0)}% Complete', style: AppTextStyles.labelMedium),
-              if (progress < 100)
-                Text('~$monthsToGoal months to goal', style: AppTextStyles.bodySmall)
+              Text('$currencySymbol${netMonthlySavings.toStringAsFixed(0)} / $currencySymbol${savingsGoal.toStringAsFixed(0)} per mo', style: AppTextStyles.labelMedium),
+              if (savingsGoal > 0 && netMonthlySavings > 0)
+                Text('~$monthsToGoal months to reach target', style: AppTextStyles.bodySmall)
+              else if (savingsGoal > 0 && netMonthlySavings <= 0)
+                Text('Increase income or lower spend', style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning))
               else
-                Text('Goal reached!', style: AppTextStyles.bodySmall.copyWith(color: AppColors.success)),
+                Text('Set a goal in Profile', style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary)),
             ],
           ),
         ],

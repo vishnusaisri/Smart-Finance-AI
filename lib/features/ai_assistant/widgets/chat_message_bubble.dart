@@ -12,6 +12,14 @@ class ChatMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bubbleColor = message.isUser
+        ? Colors.blue[700]
+        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+    final borderColor = message.isUser
+        ? Colors.blue[600]!
+        : (isDark ? const Color(0x0DFFFFFF) : const Color(0xFFE2E8F0));
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
@@ -48,14 +56,10 @@ class ChatMessageBubble extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: message.isUser
-                        ? Colors.blue[700]
-                        : const Color(0x1AFFFFFF),
+                    color: bubbleColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: message.isUser
-                          ? Colors.blue[600]!
-                          : const Color(0x0DFFFFFF),
+                      color: borderColor,
                     ),
                   ),
                   child: Column(
@@ -91,7 +95,7 @@ class ChatMessageBubble extends StatelessWidget {
                     child: Text(
                       _formatTime(message.timestamp),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[400],
+                        color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                         fontSize: 10,
                       ),
                     ),
@@ -110,9 +114,11 @@ class ChatMessageBubble extends StatelessWidget {
   }
 
   Widget _buildMessageText(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final text = message.content;
+    final textColor = message.isUser ? Colors.white : (isDark ? Colors.white : const Color(0xFF0F172A));
     final textStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      color: message.isUser ? Colors.white : Colors.white,
+      color: textColor,
       height: 1.5,
     );
 

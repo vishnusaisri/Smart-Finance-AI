@@ -7,6 +7,9 @@ import '../theme/text_styles.dart';
 import '../../features/profile/providers/profile_providers.dart';
 import '../../routes/app_routes.dart';
 
+import '../../features/expense/controllers/expense_controller.dart';
+import '../../core/models/expense.dart';
+
 class TopBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -33,9 +36,74 @@ class TopBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
 }
 
 class _TopBarState extends ConsumerState<TopBar> {
-  int _unreadNotificationsCount = 3;
+  int _unreadNotificationsCount = 2;
 
   void _showNotificationsModal(BuildContext context) {
+    final expensesList = ref.read(expensesProvider).asData?.value ?? <Expense>[];
+    final userProfile = ref.read(userProfileProvider);
+    final monthlyIncome = userProfile.monthlyIncome;
+    final symbol = userProfile.getCurrencySymbol();
+
+    final notifications = <Widget>[];
+
+    if (expensesList.isEmpty) {
+      notifications.add(
+        _buildNotificationTile(
+          icon: Icons.check_circle_rounded,
+          color: AppColors.success,
+          title: 'Welcome to Smart Finance AI!',
+          subtitle: 'Account setup complete! Monthly income set to $symbol${monthlyIncome.toStringAsFixed(0)}.',
+          time: 'Just now',
+        ),
+      );
+      notifications.add(
+        _buildNotificationTile(
+          icon: Icons.auto_awesome_rounded,
+          color: AppColors.primary,
+          title: 'Start Expense Tracking',
+          subtitle: 'Add your daily expenses to unlock real-time financial health analytics & AI recommendations.',
+          time: 'Just now',
+        ),
+      );
+    } else {
+      final totalSpent = expensesList.fold<double>(0, (sum, e) => sum + e.amount);
+      final byCategory = <String, double>{};
+      for (final e in expensesList) {
+        byCategory[e.category] = (byCategory[e.category] ?? 0) + e.amount;
+      }
+      String? topCat;
+      double topAmt = 0;
+      byCategory.forEach((cat, amt) {
+        if (amt > topAmt) {
+          topAmt = amt;
+          topCat = cat;
+        }
+      });
+      final catPct = monthlyIncome > 0 ? (topAmt / monthlyIncome * 100) : 0.0;
+
+      notifications.add(
+        _buildNotificationTile(
+          icon: Icons.account_balance_wallet_rounded,
+          color: AppColors.primary,
+          title: 'Monthly Spending Summary',
+          subtitle: 'Logged ${expensesList.length} transaction(s) totaling $symbol${totalSpent.toStringAsFixed(0)}.',
+          time: 'Just now',
+        ),
+      );
+
+      if (topCat != null) {
+        notifications.add(
+          _buildNotificationTile(
+            icon: catPct > 30 ? Icons.warning_rounded : Icons.info_outline_rounded,
+            color: catPct > 30 ? AppColors.warning : AppColors.secondary,
+            title: 'Top Category Spending',
+            subtitle: '$topCat accounts for ${catPct.toStringAsFixed(0)}% of income ($symbol${topAmt.toStringAsFixed(0)}).',
+            time: 'Just now',
+          ),
+        );
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF0F172A),
@@ -75,27 +143,7 @@ class _TopBarState extends ConsumerState<TopBar> {
                   ),
                   const Divider(color: Color(0x1AFFFFFF)),
                   const SizedBox(height: AppSpacing.sm),
-                  _buildNotificationTile(
-                    icon: Icons.account_balance_wallet_rounded,
-                    color: AppColors.warning,
-                    title: 'Budget Alert',
-                    subtitle: 'Food & Dining is close to your monthly limit (82% spent).',
-                    time: '10m ago',
-                  ),
-                  _buildNotificationTile(
-                    icon: Icons.auto_awesome_rounded,
-                    color: AppColors.primary,
-                    title: 'Smart AI Insight',
-                    subtitle: 'New savings recommendation available on your dashboard.',
-                    time: '1h ago',
-                  ),
-                  _buildNotificationTile(
-                    icon: Icons.check_circle_rounded,
-                    color: AppColors.success,
-                    title: 'Monthly Summary Ready',
-                    subtitle: 'Your financial health report for this month is generated.',
-                    time: '1d ago',
-                  ),
+                  ...notifications,
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),
@@ -158,75 +206,80 @@ class _TopBarState extends ConsumerState<TopBar> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
     final isTablet = screenWidth >= 768 && screenWidth < 1024;
     final userProfile = ref.watch(userProfileProvider);
     final userInitial = userProfile.fullName.isNotEmpty ? userProfile.fullName[0].toUpperCase() : 'U';
 
+    final iconColor = isDark ? Colors.white : const Color(0xFF0F172A);
+
     return SafeArea(
       bottom: false,
       child: Container(
         height: widget.preferredSize.height,
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? AppSpacing.md : AppSpacing.xl,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0x1AFFFFFF),
-            width: 1,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? AppSpacing.md : AppSpacing.xl,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : Colors.white,
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? const Color(0x1AFFFFFF) : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: Row(
-        children: [
-          if (widget.showMenuButton)
-            IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: widget.onMenuPressed,
-              padding: EdgeInsets.zero,
+        child: Row(
+          children: [
+            if (widget.showMenuButton)
+              IconButton(
+                icon: Icon(Icons.menu, color: iconColor),
+                onPressed: widget.onMenuPressed,
+                padding: EdgeInsets.zero,
+              ),
+            if (widget.showMenuButton) const SizedBox(width: AppSpacing.md),
+            Flexible(
+              child: Text(
+                widget.title,
+                style: AppTextStyles.h4,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          if (widget.showMenuButton) const SizedBox(width: AppSpacing.md),
-          Flexible(
-            child: Text(
-              widget.title,
-              style: AppTextStyles.h4,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const Spacer(),
-          if (!isMobile && widget.showSearch)
-            Container(
-              width: isTablet ? 200 : 300,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0x33FFFFFF)),
+            const Spacer(),
+            if (!isMobile && widget.showSearch)
+              Container(
+                width: isTablet ? 200 : 300,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: Icon(Icons.search, size: 18, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                    fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                    filled: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: isDark ? const Color(0x33FFFFFF) : const Color(0xFFE2E8F0)),
+                    ),
                   ),
                 ),
               ),
-            ),
-          if (!isMobile && widget.showSearch) const SizedBox(width: AppSpacing.lg),
+            if (!isMobile && widget.showSearch) const SizedBox(width: AppSpacing.lg),
 
-          // Notification Bell with Badge
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                tooltip: 'Notifications',
-                onPressed: () => _showNotificationsModal(context),
-              ),
+            // Notification Bell with Badge
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.notifications_outlined, color: iconColor),
+                  tooltip: 'Notifications',
+                  onPressed: () => _showNotificationsModal(context),
+                ),
               if (_unreadNotificationsCount > 0)
                 Positioned(
                   right: 8,

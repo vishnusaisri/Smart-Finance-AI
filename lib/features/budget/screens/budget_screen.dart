@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../routes/app_routes.dart';
 import '../controllers/budget_controller.dart';
 import '../../../core/models/budget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -172,6 +175,20 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                 ),
                 Row(
                   children: [
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        context.push('${RouteNames.addExpense}?category=${Uri.encodeComponent(budget.category)}');
+                      },
+                      icon: const Icon(Icons.add_circle_outline, size: 16),
+                      label: const Text('Add Expense', style: TextStyle(fontSize: 12)),
+                    ),
+                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.edit, size: 20),
                       onPressed: () => _showEditBudgetDialog(context, ref, budget),

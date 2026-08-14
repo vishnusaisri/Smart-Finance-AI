@@ -11,7 +11,7 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../controllers/expense_controller.dart';
 import '../services/expense_category_service.dart';
-import '../../../routes/app_routes.dart';
+import '../../profile/providers/profile_providers.dart';
 
 class ExpenseDetailScreen extends ConsumerWidget {
   final String expenseId;
@@ -38,12 +38,14 @@ class ExpenseDetailScreen extends ConsumerWidget {
         ),
       ),
       data: (expenses) {
+        final userProfile = ref.watch(userProfileProvider);
+        final symbol = userProfile.getCurrencySymbol();
         final expense = expenses.firstWhere(
           (e) => e.id == expenseId,
           orElse: () => throw Exception('Expense not found'),
         );
 
-        return _ExpenseDetailContent(expense: expense);
+        return _ExpenseDetailContent(expense: expense, symbol: symbol);
       },
     );
   }
@@ -51,8 +53,8 @@ class ExpenseDetailScreen extends ConsumerWidget {
 
 class _ExpenseDetailContent extends ConsumerWidget {
   final Expense expense;
-
-  const _ExpenseDetailContent({required this.expense});
+  final String symbol;
+  const _ExpenseDetailContent({required this.expense, required this.symbol});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,7 +71,7 @@ class _ExpenseDetailContent extends ConsumerWidget {
             child: Column(
               children: [
                 Text(
-                  '-\$${expense.amount.toStringAsFixed(2)}',
+                  '-$symbol${expense.amount.toStringAsFixed(2)}',
                   style: AppTextStyles.display2.copyWith(
                     color: AppColors.danger,
                     fontWeight: FontWeight.w700,

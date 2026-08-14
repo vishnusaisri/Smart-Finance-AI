@@ -36,7 +36,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
     
     // Get real user data from profile
     final monthlyIncome = userProfile.monthlyIncome;
-    final startingSavings = userProfile.savingsGoal; 
+    final currencySymbol = userProfile.getCurrencySymbol();
 
     return Scaffold(
       appBar: AppBar(
@@ -52,6 +52,9 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
           if (expenses.isEmpty) {
             return const Center(child: Text('Need more data to run simulation.', style: TextStyle(color: Colors.white)));
           }
+
+          final totalExpenses = expenses.fold<double>(0, (sum, e) => sum + e.amount);
+          final startingSavings = (monthlyIncome - totalExpenses).clamp(0.0, double.infinity);
 
           // Calculate behavioral insights
           final behavioralInsights = _calculateBehavioralInsights(expenses, monthlyIncome);
@@ -212,6 +215,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                               simulation.currentNetWorth,
                               Colors.orange,
                               primaryInsight['stress']?.toString() ?? 'Moderate',
+                              currencySymbol,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
@@ -221,6 +225,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                               simulation.optimizedNetWorth,
                               const Color(0xFF06B6D4),
                               'Stable',
+                              currencySymbol,
                             ),
                           ),
                         ],
@@ -275,7 +280,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                                             return Padding(
                                               padding: const EdgeInsets.only(right: 8.0),
                                               child: Text(
-                                                '\$${(value.toInt() / 1000).toInt()}k',
+                                                '₹${(value.toInt() / 1000).toInt()}k',
                                                 style: AppTextStyles.caption.copyWith(color: Colors.white70),
                                               ),
                                             );
@@ -332,7 +337,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                         style: AppTextStyles.h4.copyWith(color: Colors.white),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildAICoachingCard(simulation, primaryInsight),
+                      _buildAICoachingCard(simulation, primaryInsight, currencySymbol),
                       const SizedBox(height: AppSpacing.xxl),
 
                       // Scenario Comparison Table
@@ -341,7 +346,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                         style: AppTextStyles.h4.copyWith(color: Colors.white),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildScenarioTable(simulation, monthlyIncome),
+                      _buildScenarioTable(simulation, monthlyIncome, expenses, currencySymbol),
                     ],
                   ),
                 );
@@ -521,6 +526,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                                     simulation.currentNetWorth,
                                     Colors.orange,
                                     primaryInsight['stress']?.toString() ?? 'Moderate',
+                                    currencySymbol,
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.md),
@@ -530,6 +536,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                                     simulation.optimizedNetWorth,
                                     const Color(0xFF06B6D4),
                                     'Stable',
+                                    currencySymbol,
                                   ),
                                 ),
                               ],
@@ -596,7 +603,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                                                   return Padding(
                                                     padding: const EdgeInsets.only(right: 8.0),
                                                     child: Text(
-                                                      '\$${(value.toInt() / 1000).toInt()}k',
+                                                      '₹${(value.toInt() / 1000).toInt()}k',
                                                       style: AppTextStyles.caption.copyWith(color: Colors.white70),
                                                     ),
                                                   );
@@ -653,7 +660,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                               style: AppTextStyles.h4.copyWith(color: Colors.white),
                             ),
                             const SizedBox(height: AppSpacing.lg),
-                            _buildAICoachingCard(simulation, primaryInsight),
+                            _buildAICoachingCard(simulation, primaryInsight, currencySymbol),
                             const SizedBox(height: AppSpacing.xxl),
 
                             // Scenario Comparison Table
@@ -662,7 +669,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                               style: AppTextStyles.h4.copyWith(color: Colors.white),
                             ),
                             const SizedBox(height: AppSpacing.lg),
-                            _buildScenarioTable(simulation, monthlyIncome),
+                            _buildScenarioTable(simulation, monthlyIncome, expenses, currencySymbol),
                           ],
                         ),
                       ),
@@ -816,7 +823,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
                   ? 'Weekend spending is high' 
                   : insight['impulse_ratio'] > 0.2 
                       ? 'Impulse purchases: ${((insight['impulse_ratio'] as double) * 100).toStringAsFixed(0)}% of spending'
-                      : 'Subscription leakage: \$${(insight['subscription_leakage'] as double).toStringAsFixed(0)}/mo',
+                      : 'Subscription leakage: ₹${(insight['subscription_leakage'] as double).toStringAsFixed(0)}/mo',
               style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
             ),
           ),
@@ -825,7 +832,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
     );
   }
 
-  Widget _buildTimelineCard(String title, double amount, Color color, String status) {
+  Widget _buildTimelineCard(String title, double amount, Color color, String status, String currencySymbol) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -867,7 +874,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              '\$${amount.toStringAsFixed(0)}',
+              '$currencySymbol${amount.toStringAsFixed(0)}',
               style: AppTextStyles.h2.copyWith(color: color),
               maxLines: 1,
             ),
@@ -882,7 +889,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
     );
   }
 
-  Widget _buildAICoachingCard(TwinSimulationResult simulation, Map<String, dynamic> behavioralInsights) {
+  Widget _buildAICoachingCard(TwinSimulationResult simulation, Map<String, dynamic> behavioralInsights, String currencySymbol) {
     final improvement = simulation.optimizedNetWorth - simulation.currentNetWorth;
     final improvementPercent = simulation.currentNetWorth > 0 
         ? (improvement / simulation.currentNetWorth * 100).abs() 
@@ -899,7 +906,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
               Expanded(
                 child: Text(
                   improvement > 0 
-                      ? 'If you optimize your spending habits, you could build an additional \$${improvement.toStringAsFixed(0)} in wealth over 12 months (${improvementPercent.toStringAsFixed(0)}% improvement).'
+                      ? 'If you optimize your spending habits, you could build an additional $currencySymbol${improvement.toStringAsFixed(0)} in wealth over 12 months (${improvementPercent.toStringAsFixed(0)}% improvement).'
                       : 'Your current trajectory is strong. Maintain your disciplined approach to continue building wealth.',
                   style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
                 ),
@@ -928,26 +935,35 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
     ).animate().fadeIn(duration: 600.ms).slideX(begin: 0.1, end: 0);
   }
 
-  Widget _buildScenarioTable(TwinSimulationResult simulation, double monthlyIncome) {
+  Widget _buildScenarioTable(TwinSimulationResult simulation, double monthlyIncome, List<Expense> expenses, String currencySymbol) {
+    final foodExpenses = expenses
+        .where((e) => e.category.toLowerCase().contains('food') || e.category.toLowerCase().contains('dining'))
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    final annualFoodSavings = (foodExpenses * 0.20) * 12;
+    final foodOptWorth = simulation.currentNetWorth + annualFoodSavings;
+
+    final sipAmount = _sipInvestment > 0 ? _sipInvestment : 5000.0;
+    final sipOptWorth = simulation.currentNetWorth + (sipAmount * 12.68);
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('What-If Scenarios', style: AppTextStyles.h5.copyWith(color: Colors.white)),
           const SizedBox(height: AppSpacing.lg),
-          _buildScenarioRow('Current Lifestyle', simulation.currentNetWorth, Colors.orange),
+          _buildScenarioRow('Current Lifestyle', simulation.currentNetWorth, Colors.orange, currencySymbol),
           const Divider(color: Color(0x1AFFFFFF)),
-          _buildScenarioRow('Reduce Food 20%', simulation.currentNetWorth * 1.15, const Color(0xFF06B6D4)),
+          _buildScenarioRow('Reduce Food 20%', foodOptWorth, const Color(0xFF06B6D4), currencySymbol),
           const Divider(color: Color(0x1AFFFFFF)),
-          _buildScenarioRow('Add SIP \$5k/mo', simulation.currentNetWorth + (_sipInvestment * 12) + 500, Colors.green),
+          _buildScenarioRow('SIP $currencySymbol${sipAmount.toStringAsFixed(0)}/mo', sipOptWorth, Colors.green, currencySymbol),
           const Divider(color: Color(0x1AFFFFFF)),
-          _buildScenarioRow('Full Optimization', simulation.optimizedNetWorth, const Color(0xFF8B5CF6)),
+          _buildScenarioRow('Full Optimization', simulation.optimizedNetWorth, const Color(0xFF8B5CF6), currencySymbol),
         ],
       ),
     );
   }
 
-  Widget _buildScenarioRow(String label, double amount, Color color) {
+  Widget _buildScenarioRow(String label, double amount, Color color, String currencySymbol) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
@@ -955,7 +971,7 @@ class _FinancialTwinScreenState extends ConsumerState<FinancialTwinScreen> {
         children: [
           Text(label, style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
           Text(
-            '\$${amount.toStringAsFixed(0)}',
+            '$currencySymbol${amount.toStringAsFixed(0)}',
             style: AppTextStyles.labelLarge.copyWith(color: color, fontWeight: FontWeight.w600),
           ),
         ],

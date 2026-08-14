@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/models/user_profile.dart';
 import '../../../core/services/cache_service.dart';
+import '../../auth/services/user_profile_service.dart';
 
 // User Profile Provider
 class UserProfileNotifier extends Notifier<UserProfile> {
@@ -62,75 +63,67 @@ class UserProfileNotifier extends Notifier<UserProfile> {
     }
   }
 
+  Future<void> _saveProfile(UserProfile profile) async {
+    state = profile;
+    await _cacheService.saveUserProfile(profile);
+    try {
+      if (profile.uid.isNotEmpty) {
+        await ref.read(userProfileServiceProvider).saveUserProfile(profile);
+      }
+    } catch (e) {
+      debugPrint('Failed to save profile to database: $e');
+    }
+  }
+
   Future<void> updateProfile(
     UserProfile updatedProfile,
   ) async {
-
-    state = updatedProfile;
-
-    await _cacheService.saveUserProfile(
-      updatedProfile,
-    );
+    await _saveProfile(updatedProfile);
   }
 
   Future<void> updatePersonalInfo({
     required String name,
     required String email,
   }) async {
-
-    state = state.copyWith(
+    final updated = state.copyWith(
       fullName: name,
+      name: name,
       email: email,
       updatedAt: DateTime.now(),
     );
-
-    await _cacheService.saveUserProfile(
-      state,
-    );
+    await _saveProfile(updated);
   }
 
   Future<void> updateFinancialGoals({
     required double monthlyIncome,
     required double savingsGoal,
   }) async {
-
-    state = state.copyWith(
+    final updated = state.copyWith(
       monthlyIncome: monthlyIncome,
       savingsGoal: savingsGoal,
       updatedAt: DateTime.now(),
     );
-
-    await _cacheService.saveUserProfile(
-      state,
-    );
+    await _saveProfile(updated);
   }
 
   Future<void> updateCurrency(
     String currency,
   ) async {
-
-    state = state.copyWith(
+    final updated = state.copyWith(
       currency: currency,
       updatedAt: DateTime.now(),
     );
-
-    await _cacheService.saveUserProfile(
-      state,
-    );
+    await _saveProfile(updated);
   }
 
   Future<void> updateLocale(
     String locale,
   ) async {
-
-    state = state.copyWith(
+    final updated = state.copyWith(
       locale: locale,
       updatedAt: DateTime.now(),
     );
-
-    await _cacheService.saveUserProfile(
-      state,
-    );
+    await _saveProfile(updated);
   }
 
   Future<void> updateNotifications({
@@ -141,46 +134,27 @@ class UserProfileNotifier extends Notifier<UserProfile> {
     required bool weeklyReports,
     required bool monthlyReports,
   }) async {
-
-    state = state.copyWith(
-      notificationsEnabled:
-          notificationsEnabled,
-
-      budgetAlertsEnabled:
-          budgetAlertsEnabled,
-
-      spendingLimitAlerts:
-          spendingLimitAlerts,
-
-      lowBalanceAlerts:
-          lowBalanceAlerts,
-
-      weeklyReports:
-          weeklyReports,
-
-      monthlyReports:
-          monthlyReports,
-
+    final updated = state.copyWith(
+      notificationsEnabled: notificationsEnabled,
+      budgetAlertsEnabled: budgetAlertsEnabled,
+      spendingLimitAlerts: spendingLimitAlerts,
+      lowBalanceAlerts: lowBalanceAlerts,
+      weeklyReports: weeklyReports,
+      monthlyReports: monthlyReports,
       updatedAt: DateTime.now(),
     );
-
-    await _cacheService.saveUserProfile(
-      state,
-    );
+    await _saveProfile(updated);
   }
 
   Future<void> toggleDarkMode(
     bool enabled,
   ) async {
-
-    state = state.copyWith(
+    final updated = state.copyWith(
       darkMode: enabled,
       updatedAt: DateTime.now(),
     );
-
-    await _cacheService.saveUserProfile(
-      state,
-    );
+    await _saveProfile(updated);
+    await ref.read(themeModeProvider.notifier).setTheme(enabled ? 'dark' : 'light');
   }
 }
 

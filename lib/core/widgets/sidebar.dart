@@ -80,14 +80,16 @@ class _SidebarState extends State<Sidebar> {
         final shouldCollapse = isTablet || constraints.maxHeight < 900;
         final isCollapsed = _isCollapsed || shouldCollapse;
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: isCollapsed ? 80 : 270,
-          decoration: const BoxDecoration(
-            color: Color(0xFF0F172A),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
             border: Border(
               right: BorderSide(
-                color: Color(0x1AFFFFFF),
+                color: isDark ? const Color(0x1AFFFFFF) : const Color(0xFFE2E8F0),
                 width: 1,
               ),
             ),
@@ -176,9 +178,15 @@ class _SidebarState extends State<Sidebar> {
   }
 
   Widget _buildSidebarItem(_SidebarItem item, bool isCollapsed) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = widget.currentRoute == item.route ||
         (item.route != '/dashboard' &&
             widget.currentRoute.startsWith(item.route));
+
+    final activeBg = const Color(0xFF8B5CF6).withOpacity(isDark ? 0.15 : 0.12);
+    final activeColor = const Color(0xFF8B5CF6);
+    final inactiveColor = isDark ? Colors.white70 : const Color(0xFF64748B);
+    final activeTextColor = isDark ? Colors.white : const Color(0xFF8B5CF6);
 
     // COLLAPSED MODE
     if (isCollapsed) {
@@ -197,16 +205,12 @@ class _SidebarState extends State<Sidebar> {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: isActive
-                    ? const Color(0xFF8B5CF6).withOpacity(0.15)
-                    : Colors.transparent,
+                color: isActive ? activeBg : Colors.transparent,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 item.icon,
-                color: isActive
-                    ? const Color(0xFF8B5CF6)
-                    : Colors.white70,
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
           ),
@@ -226,22 +230,17 @@ class _SidebarState extends State<Sidebar> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          tileColor: isActive
-              ? const Color(0xFF8B5CF6).withOpacity(0.15)
-              : Colors.transparent,
+          tileColor: isActive ? activeBg : Colors.transparent,
           leading: Icon(
             item.icon,
-            color: isActive
-                ? const Color(0xFF8B5CF6)
-                : Colors.white70,
+            color: isActive ? activeColor : inactiveColor,
           ),
           title: Text(
             item.label,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: isActive
-                  ? Colors.white
-                  : Colors.white70,
+              color: isActive ? activeTextColor : inactiveColor,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
           onTap: () {

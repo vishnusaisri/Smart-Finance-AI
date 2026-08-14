@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/services/preferences_service.dart';
+import 'core/services/cache_service.dart';
 import 'core/utils/snackbar_utils.dart';
 import 'core/services/connectivity_service.dart';
 
@@ -57,14 +58,15 @@ class SmartFinanceApp extends ConsumerWidget {
     // Initialize connectivity listener
     ref.watch(connectivityProvider);
 
-    final router =
-        ref.watch(goRouterProvider);
+    final router = ref.watch(goRouterProvider);
+    final themeModeStr = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Smart Finance AI',
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
+      themeMode: themeModeStr == 'light' ? ThemeMode.light : ThemeMode.dark,
       routerConfig: router,
       scaffoldMessengerKey: scaffoldMessengerKey,
     );

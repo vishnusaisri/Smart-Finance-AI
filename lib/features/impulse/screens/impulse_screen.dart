@@ -275,7 +275,7 @@ class ImpulseScreen extends ConsumerWidget {
     
     if (score > 70) {
       recommendations.addAll([
-        'Use the 24-hour rule before purchases over \$50',
+        'Use the 24-hour rule before purchases over ₹1,000',
         'Set a weekly spending limit for entertainment',
         'Track weekend spending more carefully',
         'Unsubscribe from marketing emails',

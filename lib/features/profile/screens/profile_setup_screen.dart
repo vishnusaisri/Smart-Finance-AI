@@ -113,7 +113,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     hint: 'e.g., 5000',
                     controller: _incomeController,
                     keyboardType: TextInputType.number,
-                    prefixIcon: const Icon(Icons.attach_money),
+                    prefixText: '₹ ',
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Required field';
                       if (double.tryParse(value) == null) return 'Must be a number';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/services/cache_service.dart';
 import '../providers/profile_providers.dart';
 
 class SettingsSection extends ConsumerStatefulWidget {
@@ -115,7 +116,7 @@ class _SettingsSectionState extends ConsumerState<SettingsSection> {
               context,
               'Spending Limit Alerts',
               userProfile.spendingLimitAlerts,
-              Icons.attach_money,
+              Icons.currency_rupee,
               (value) => ref.read(userProfileProvider.notifier).updateNotifications(
                 notificationsEnabled: userProfile.notificationsEnabled,
                 budgetAlertsEnabled: userProfile.budgetAlertsEnabled,
@@ -387,10 +388,12 @@ class _SettingsSectionState extends ConsumerState<SettingsSection> {
 
   void _toggleTheme() {
     final currentTheme = ref.read(userProfileProvider).darkMode;
-    ref.read(userProfileProvider.notifier).toggleDarkMode(!currentTheme);
+    final newThemeMode = !currentTheme;
+    ref.read(userProfileProvider.notifier).toggleDarkMode(newThemeMode);
+    ref.read(themeModeProvider.notifier).setTheme(newThemeMode ? 'dark' : 'light');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Theme changed to ${!currentTheme ? 'Light' : 'Dark'} Mode'),
+        content: Text('Theme changed to ${newThemeMode ? 'Dark' : 'Light'} Mode'),
         backgroundColor: Colors.green,
       ),
     );

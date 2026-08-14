@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/utils/validation_utils.dart';
 import '../providers/profile_providers.dart';
 
 class PersonalInfoForm extends ConsumerStatefulWidget {
@@ -95,15 +96,7 @@ class _PersonalInfoFormState extends ConsumerState<PersonalInfoForm> {
                 onChanged: (value) {
                   ref.read(personalInfoFormProvider.notifier).updateEmail(value);
                 },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Email is required';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\$').hasMatch(value)) {
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
+                validator: (value) => ValidationUtils.validateEmail(value),
               ),
               if (formState['emailError'] != null)
                 Padding(

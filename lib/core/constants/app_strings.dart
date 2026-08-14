@@ -158,6 +158,6 @@ class AppStrings {
   static const String yearly = 'Yearly';
 
   // Currency
-  static const String defaultCurrency = 'USD';
-  static const String currencySymbol = '\$';
+  static const String defaultCurrency = 'INR';
+  static const String currencySymbol = '₹';
 }

@@ -91,16 +91,13 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? Colors.white : const Color(0xFF0F172A);
+
     return Drawer(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-          ),
-        ),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         child: SafeArea(
           child: Column(
             children: [
@@ -132,27 +129,25 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
                           Text(
                             AppStrings.appName,
                             style: AppTextStyles.h6.copyWith(
-                              color: Colors.white,
+                              color: iconColor,
                             ),
                           ),
                           Text(
                             'Smart Finance',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                            style: AppTextStyles.bodySmall,
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(Icons.close, color: iconColor),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
               ),
 
-              const Divider(color: Color(0x1AFFFFFF)),
+              Divider(color: isDark ? const Color(0x1AFFFFFF) : const Color(0xFFE2E8F0)),
 
               // Navigation Items
               Expanded(
@@ -170,7 +165,7 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
                 ),
               ),
 
-              const Divider(color: Color(0x1AFFFFFF)),
+              Divider(color: isDark ? const Color(0x1AFFFFFF) : const Color(0xFFE2E8F0)),
 
               // Logout
               Padding(
@@ -192,9 +187,12 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
   }
 
   Widget _buildDrawerItem(_DrawerItem item, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = widget.currentRoute == item.route ||
         (item.route != '/dashboard' &&
             widget.currentRoute.startsWith(item.route));
+
+    final textColor = isActive ? AppColors.primary : (isDark ? Colors.white : const Color(0xFF0F172A));
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -221,12 +219,12 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
                   decoration: BoxDecoration(
                     color: isActive 
                         ? AppColors.primary.withOpacity(0.2)
-                        : AppColors.textSecondary.withOpacity(0.1),
+                        : (isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFF1F5F9)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     item.icon,
-                    color: isActive ? AppColors.primary : AppColors.textSecondary,
+                    color: isActive ? AppColors.primary : (isDark ? Colors.white70 : const Color(0xFF64748B)),
                     size: 20,
                   ),
                 ),
@@ -235,7 +233,7 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
                   child: Text(
                     item.label,
                     style: AppTextStyles.labelLarge.copyWith(
-                      color: isActive ? AppColors.primary : Colors.white,
+                      color: textColor,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
@@ -244,7 +242,7 @@ class _MobileDrawerState extends State<MobileDrawer> with SingleTickerProviderSt
                   Container(
                     width: 4,
                     height: 4,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),

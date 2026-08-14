@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/text_styles.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/services/cache_service.dart';
-import '../../../../routes/app_routes.dart';
 
 class SettingsSection extends ConsumerStatefulWidget {
   const SettingsSection({super.key});
@@ -35,12 +33,13 @@ class _SettingsSectionState extends ConsumerState<SettingsSection> {
   }
 
   Future<void> _saveSettings() async {
+    final themeMode = _darkMode ? 'dark' : 'light';
+    await ref.read(themeModeProvider.notifier).setTheme(themeMode);
     final cacheService = ref.read(cacheServiceProvider);
-    await cacheService.saveThemeMode(_darkMode ? 'dark' : 'light');
     await cacheService.saveNotificationsEnabled(_notificationsEnabled);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
+        SnackBar(content: Text('Theme updated to ${_darkMode ? 'Dark' : 'Light'} Mode')),
       );
     }
   }

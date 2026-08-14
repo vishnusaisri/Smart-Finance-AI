@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../expense/controllers/expense_controller.dart';
+import '../../profile/providers/profile_providers.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -14,6 +15,8 @@ class AnalyticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final expensesAsync = ref.watch(expensesProvider);
+    final userProfile = ref.watch(userProfileProvider);
+    final currencySymbol = userProfile.getCurrencySymbol();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -31,7 +34,7 @@ class AnalyticsScreen extends ConsumerWidget {
               expensesAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => const Center(child: Text('Error loading analytics')),
-                data: (expenses) => _buildAnalyticsContent(expenses),
+                data: (expenses) => _buildAnalyticsContent(expenses, currencySymbol),
               ),
             ],
           ),
@@ -40,7 +43,7 @@ class AnalyticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAnalyticsContent(List<dynamic> expenses) {
+  Widget _buildAnalyticsContent(List<dynamic> expenses, String currencySymbol) {
     if (expenses.isEmpty) {
       return GlassCard(
         child: Column(
@@ -66,16 +69,16 @@ class AnalyticsScreen extends ConsumerWidget {
 
     return Column(
       children: [
-        _buildSummaryCards(total, expenses.length),
+        _buildSummaryCards(total, expenses.length, currencySymbol),
         const SizedBox(height: AppSpacing.xl),
-        _buildCategoryBreakdown(sortedCategories, total),
+        _buildCategoryBreakdown(sortedCategories, total, currencySymbol),
         const SizedBox(height: AppSpacing.xl),
         _buildMonthlyTrend(expenses),
       ],
     );
   }
 
-  Widget _buildSummaryCards(double total, int count) {
+  Widget _buildSummaryCards(double total, int count, String currencySymbol) {
     return Row(
       children: [
         Expanded(
@@ -85,7 +88,7 @@ class AnalyticsScreen extends ConsumerWidget {
               children: [
                 Text('Total Spending', style: AppTextStyles.labelMedium),
                 const SizedBox(height: AppSpacing.sm),
-                Text('\$${total.toStringAsFixed(0)}', style: AppTextStyles.h4),
+                Text('$currencySymbol${total.toStringAsFixed(0)}', style: AppTextStyles.h4),
                 const SizedBox(height: AppSpacing.xs),
                 Text('$count transactions', style: AppTextStyles.bodySmall),
               ],
@@ -100,7 +103,7 @@ class AnalyticsScreen extends ConsumerWidget {
               children: [
                 Text('Avg Transaction', style: AppTextStyles.labelMedium),
                 const SizedBox(height: AppSpacing.sm),
-                Text('\$${(total / count).toStringAsFixed(0)}', style: AppTextStyles.h4),
+                Text('$currencySymbol${(total / count).toStringAsFixed(0)}', style: AppTextStyles.h4),
                 const SizedBox(height: AppSpacing.xs),
                 Text('Per expense', style: AppTextStyles.bodySmall),
               ],
@@ -111,7 +114,7 @@ class AnalyticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryBreakdown(List<MapEntry<String, double>> sortedCategories, double total) {
+  Widget _buildCategoryBreakdown(List<MapEntry<String, double>> sortedCategories, double total, String currencySymbol) {
     final colors = [
       AppColors.primary,
       AppColors.secondary,
@@ -179,7 +182,7 @@ class AnalyticsScreen extends ConsumerWidget {
                       style: AppTextStyles.labelMedium,
                     ),
                   ),
-                  Text('\$${category.value.toStringAsFixed(0)}', style: AppTextStyles.labelMedium),
+                  Text('$currencySymbol${category.value.toStringAsFixed(0)}', style: AppTextStyles.labelMedium),
                   const SizedBox(width: AppSpacing.sm),
                   Text('${percentage.toStringAsFixed(0)}%', style: AppTextStyles.bodySmall),
                 ],

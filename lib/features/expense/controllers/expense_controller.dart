@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/models/expense.dart';
 import '../services/expense_service.dart';
 

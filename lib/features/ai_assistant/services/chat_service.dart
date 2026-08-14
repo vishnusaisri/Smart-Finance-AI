@@ -189,17 +189,39 @@ What would you like to know about your finances today?''',
           ? 'None'
           : categoryBreakdown.entries.reduce((a, b) => a.value > b.value ? a : b).key;
 
+      final realSavingsRate = monthlyIncome > 0 ? ((monthlyIncome - totalExpenses) / monthlyIncome) * 100 : 0.0;
+      final healthScore = _calculateHealthScore(realSavingsRate, totalExpenses, monthlyIncome);
+
       return await _geminiService.answerFinancialQuestion(
         question: message,
         userContext: {
           'monthlyIncome': monthlyIncome,
           'totalExpenses': totalExpenses,
-          'savingsRate': monthlyIncome > 0 ? (savingsGoal / monthlyIncome) * 100 : 0.0,
+          'savingsRate': realSavingsRate,
           'topCategory': topCategory,
-          'healthScore': 75.0,
+          'healthScore': healthScore,
+          'currencySymbol': userProfile.getCurrencySymbol(),
         },
       );
     }
+  }
+
+  double _calculateHealthScore(double savingsRate, double totalExpenses, double monthlyIncome) {
+    if (monthlyIncome == 0) return 50.0;
+    double score = 50.0;
+    if (savingsRate >= 20) score += 30;
+    else if (savingsRate >= 15) score += 25;
+    else if (savingsRate >= 10) score += 20;
+    else if (savingsRate >= 5) score += 10;
+    else if (savingsRate < 0) score -= 10;
+    
+    final expenseRatio = (totalExpenses / monthlyIncome) * 100;
+    if (expenseRatio <= 70) score += 20;
+    else if (expenseRatio <= 80) score += 15;
+    else if (expenseRatio <= 90) score += 10;
+    else if (expenseRatio > 100) score -= 10;
+    
+    return score.clamp(0.0, 100.0);
   }
 
   void _setTyping(bool isTyping) {

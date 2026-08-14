@@ -3,13 +3,20 @@ import 'package:flutter/material.dart';
 class ValidationUtils {
   // Email validation with regex
   static String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter your email';
     }
     
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
+    final trimmed = value.trim();
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.([a-zA-Z]{2,6})$');
+    final match = emailRegex.firstMatch(trimmed);
+    if (match == null) {
       return 'Please enter a valid email address';
+    }
+
+    final tld = match.group(1)?.toLowerCase() ?? '';
+    if (tld == 'co') {
+      return 'Please enter a complete domain (e.g. .com, .in, .ac.in)';
     }
     
     return null;

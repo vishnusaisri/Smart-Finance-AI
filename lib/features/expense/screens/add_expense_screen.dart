@@ -16,7 +16,8 @@ import '../controllers/expense_controller.dart';
 import '../services/expense_category_service.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
-  const AddExpenseScreen({super.key});
+  final String? initialCategory;
+  const AddExpenseScreen({super.key, this.initialCategory});
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -29,6 +30,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   String? _selectedCategory;
   DateTime _selectedDate = DateTime.now();
   bool _isImpulse = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialCategory != null && widget.initialCategory!.isNotEmpty) {
+      _selectedCategory = widget.initialCategory;
+    }
+  }
 
   @override
   void dispose() {
@@ -110,7 +119,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 hint: '0.00',
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                prefixIcon: const Icon(Icons.attach_money),
+                prefixText: '₹ ',
                 validator: (value) => ValidationUtils.validateAmount(value, min: 0.01, max: 1000000),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -144,22 +153,41 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
-                children: categories.map((category) {
-                  final isSelected = _selectedCategory == category.name;
-                  return ChoiceChip(
-                    label: Text(category.name),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCategory = selected ? category.name : null;
-                      });
-                    },
-                    selectedColor: category.color.withOpacity(0.2),
-                    labelStyle: AppTextStyles.labelMedium.copyWith(
-                      color: isSelected ? category.color : AppColors.textSecondary,
+                children: [
+                  if (_selectedCategory != null &&
+                      !categories.any((c) => c.name.toLowerCase() == _selectedCategory!.toLowerCase()))
+                    ChoiceChip(
+                      label: Text(_selectedCategory!),
+                      selected: true,
+                      onSelected: (selected) {
+                        if (!selected) {
+                          setState(() {
+                            _selectedCategory = null;
+                          });
+                        }
+                      },
+                      selectedColor: AppColors.primary.withOpacity(0.2),
+                      labelStyle: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
-                  );
-                }).toList(),
+                  ...categories.map((category) {
+                    final isSelected = _selectedCategory?.toLowerCase() == category.name.toLowerCase();
+                    return ChoiceChip(
+                      label: Text(category.name),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedCategory = selected ? category.name : null;
+                        });
+                      },
+                      selectedColor: category.color.withOpacity(0.2),
+                      labelStyle: AppTextStyles.labelMedium.copyWith(
+                        color: isSelected ? category.color : AppColors.textSecondary,
+                      ),
+                    );
+                  }),
+                ],
               ),
               const SizedBox(height: AppSpacing.lg),
 

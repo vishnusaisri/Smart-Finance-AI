@@ -54,7 +54,6 @@ class TwinSimulatorEngine {
     // 2. Calculate Optimized Behavior Metrics
     // Use the provided savings rate to calculate optimized savings
     final targetSavings = monthlyIncome * savingsRate;
-    final optimizedMonthlySpend = monthlyIncome - targetSavings;
     final optimizedMonthlySavings = targetSavings;
 
     // 3. Run Simulation (12 months)
@@ -87,7 +86,7 @@ class TwinSimulatorEngine {
     }
     final difference = runningOptimized - runningCurrent;
     if (difference > 1000) {
-      recommendations.add('By optimizing your behavior, you could gain an extra \$${difference.toStringAsFixed(0)} in 12 months.');
+      recommendations.add('By optimizing your behavior, you could gain an extra ₹${difference.toStringAsFixed(0)} in 12 months.');
     }
 
     return TwinSimulationResult(

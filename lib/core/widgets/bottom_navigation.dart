@@ -15,18 +15,21 @@ class BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedColor = isDark ? Colors.grey.shade400 : const Color(0xFF64748B);
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: isDark ? Colors.white.withOpacity(0.1) : const Color(0xFFE2E8F0),
             width: 1,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -46,6 +49,7 @@ class BottomNavigation extends StatelessWidget {
                 label: 'Home',
                 route: '/dashboard',
                 isActive: currentRoute == '/dashboard',
+                unselectedColor: unselectedColor,
                 context: context,
               ),
               _buildNavItem(
@@ -53,6 +57,7 @@ class BottomNavigation extends StatelessWidget {
                 label: 'Expenses',
                 route: '/expenses',
                 isActive: currentRoute.startsWith('/expenses'),
+                unselectedColor: unselectedColor,
                 context: context,
               ),
               _buildNavItem(
@@ -60,6 +65,7 @@ class BottomNavigation extends StatelessWidget {
                 label: 'Budgets',
                 route: '/budgets',
                 isActive: currentRoute == '/budgets',
+                unselectedColor: unselectedColor,
                 context: context,
               ),
               _buildNavItem(
@@ -67,6 +73,7 @@ class BottomNavigation extends StatelessWidget {
                 label: 'Analytics',
                 route: '/analytics',
                 isActive: currentRoute == '/analytics',
+                unselectedColor: unselectedColor,
                 context: context,
               ),
               _buildNavItem(
@@ -74,6 +81,7 @@ class BottomNavigation extends StatelessWidget {
                 label: 'Profile',
                 route: '/profile',
                 isActive: currentRoute == '/profile',
+                unselectedColor: unselectedColor,
                 context: context,
               ),
             ],
@@ -88,6 +96,7 @@ class BottomNavigation extends StatelessWidget {
     required String label,
     required String route,
     required bool isActive,
+    required Color unselectedColor,
     required BuildContext context,
   }) {
     return Expanded(
@@ -104,7 +113,7 @@ class BottomNavigation extends StatelessWidget {
                 Icon(
                   icon,
                   size: 24,
-                  color: isActive ? AppColors.primary : Colors.grey.shade400,
+                  color: isActive ? AppColors.primary : unselectedColor,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -112,7 +121,7 @@ class BottomNavigation extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                    color: isActive ? AppColors.primary : Colors.grey.shade400,
+                    color: isActive ? AppColors.primary : unselectedColor,
                   ),
                 ),
               ],

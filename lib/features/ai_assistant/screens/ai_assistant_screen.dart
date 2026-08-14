@@ -202,6 +202,8 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         Expanded(
@@ -211,9 +213,9 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
             itemCount: _messages.length + (_isTyping ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == _messages.length && _isTyping) {
-                return _buildTypingIndicator();
+                return _buildTypingIndicator(isDark);
               }
-              return _buildMessageBubble(_messages[index]);
+              return _buildMessageBubble(_messages[index], isDark);
             },
           ),
         ),
@@ -225,11 +227,11 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Row(
               children: [
-                _buildChip("💰 How to save more?"),
-                _buildChip("📊 Analyze my spending"),
-                _buildChip("🏦 My financial health"),
-                _buildChip("💡 Give me a tip"),
-                _buildChip("📈 Investment advice"),
+                _buildChip("💰 How to save more?", isDark),
+                _buildChip("📊 Analyze my spending", isDark),
+                _buildChip("🏦 My financial health", isDark),
+                _buildChip("💡 Give me a tip", isDark),
+                _buildChip("📈 Investment advice", isDark),
               ],
             ),
           ),
@@ -237,20 +239,33 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
         // Input bar
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: const BoxDecoration(
-            color: Color(0x0DFFFFFF),
-            border: Border(top: BorderSide(color: Color(0x1AFFFFFF), width: 1)),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : Colors.white,
+            border: Border(top: BorderSide(color: isDark ? const Color(0x1AFFFFFF) : const Color(0xFFE2E8F0), width: 1)),
           ),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _messageController,
+                  style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0F172A)),
                   decoration: InputDecoration(
                     hintText: 'Ask me about your finances...',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
+                    hintStyle: TextStyle(color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(color: isDark ? const Color(0x33FFFFFF) : const Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide(color: isDark ? const Color(0x33FFFFFF) : const Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+                    ),
                     filled: true,
-                    fillColor: const Color(0x1AFFFFFF),
+                    fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                     contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
                   ),
                   onSubmitted: (_) => _sendMessage(),
@@ -289,13 +304,20 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
     );
   }
 
-  Widget _buildChip(String text) {
+  Widget _buildChip(String text, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(right: 8, bottom: 12),
       child: ActionChip(
-        label: Text(text, style: AppTextStyles.labelMedium),
-        backgroundColor: const Color(0x1AFFFFFF),
-        side: const BorderSide(color: Color(0x44FFFFFF)),
+        label: Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        side: BorderSide(color: isDark ? const Color(0x44FFFFFF) : const Color(0xFFCBD5E1)),
         onPressed: () {
           _messageController.text = text.replaceAll(RegExp(r'[^\w\s?]'), '').trim();
           _sendMessage();
@@ -304,7 +326,19 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
+  Widget _buildMessageBubble(ChatMessage message, bool isDark) {
+    final bubbleBg = message.isUser
+        ? const Color(0xFF8B5CF6)
+        : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9));
+
+    final textColor = message.isUser
+        ? Colors.white
+        : (isDark ? Colors.white : const Color(0xFF0F172A));
+
+    final border = message.isUser
+        ? null
+        : Border.all(color: isDark ? const Color(0x22FFFFFF) : const Color(0xFFE2E8F0));
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -328,25 +362,38 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
               constraints: const BoxConstraints(maxWidth: 300),
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: message.isUser ? const Color(0xFF8B5CF6) : const Color(0x1AFFFFFF),
+                color: bubbleBg,
                 borderRadius: BorderRadius.circular(16).copyWith(
                   bottomLeft: message.isUser ? const Radius.circular(16) : Radius.zero,
                   bottomRight: message.isUser ? Radius.zero : const Radius.circular(16),
                 ),
-                border: message.isUser ? null : Border.all(color: const Color(0x22FFFFFF)),
+                border: border,
+                boxShadow: isDark
+                    ? null
+                    : [
+                        const BoxShadow(
+                          color: Color(0x0A0F172A),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
               ),
               child: Text(
                 message.text,
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, height: 1.5),
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
               ),
             ),
           ),
           if (message.isUser) ...[
             const SizedBox(width: AppSpacing.sm),
-            CircleAvatar(
+            const CircleAvatar(
               radius: 18,
-              backgroundColor: const Color(0xFF10B981),
-              child: const Icon(Icons.person_rounded, color: Colors.white, size: 18),
+              backgroundColor: Color(0xFF10B981),
+              child: Icon(Icons.person_rounded, color: Colors.white, size: 18),
             ),
           ],
         ],
@@ -354,7 +401,7 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.08, end: 0);
   }
 
-  Widget _buildTypingIndicator() {
+  Widget _buildTypingIndicator(bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -372,16 +419,16 @@ class _AIAssistantScreenState extends ConsumerState<AIAssistantScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0x1AFFFFFF),
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0x22FFFFFF)),
+              border: Border.all(color: isDark ? const Color(0x22FFFFFF) : const Color(0xFFE2E8F0)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(3, (i) =>
                 Padding(
                   padding: EdgeInsets.only(right: i < 2 ? 4 : 0),
-                  child: Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.grey.shade400, borderRadius: BorderRadius.circular(4)))
+                  child: Container(width: 8, height: 8, decoration: BoxDecoration(color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B), borderRadius: BorderRadius.circular(4)))
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .scale(begin: const Offset(1, 1), end: const Offset(1.4, 1.4), duration: Duration(milliseconds: 500 + i * 150)),
                 )

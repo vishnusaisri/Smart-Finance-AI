@@ -131,7 +131,25 @@ class AuthService {
       return {'success': true, 'error': null};
     } on FirebaseAuthException catch (e) {
       debugPrint('Password reset error: ${e.code} - ${e.message}');
-      String errorMessage = _getAuthErrorMessage(e.code);
+      final cleanCode = e.code.replaceAll('auth/', '');
+      String errorMessage;
+      switch (cleanCode) {
+        case 'user-not-found':
+        case 'invalid-credential':
+          errorMessage = 'No account found with this email address. Please check the email or sign up.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email address format. Please enter a valid email.';
+          break;
+        case 'too-many-requests':
+          errorMessage = 'Too many password reset attempts. Please wait a few minutes and try again.';
+          break;
+        case 'network-request-failed':
+          errorMessage = 'Network error. Please check your internet connection and try again.';
+          break;
+        default:
+          errorMessage = _getAuthErrorMessage(cleanCode);
+      }
       return {'success': false, 'error': errorMessage};
     } catch (e) {
       debugPrint('Password reset error: $e');
@@ -140,7 +158,8 @@ class AuthService {
   }
 
   String _getAuthErrorMessage(String code) {
-    switch (code) {
+    final cleanCode = code.replaceAll('auth/', '');
+    switch (cleanCode) {
       case 'user-not-found':
         return 'No account found with this email address.';
       case 'wrong-password':
@@ -154,13 +173,13 @@ class AuthService {
       case 'too-many-requests':
         return 'Too many attempts. Please try again later.';
       case 'operation-not-allowed':
-        return 'Email/password sign-in is not enabled.';
+        return 'Email/password sign-in is not enabled in Firebase Auth.';
       case 'user-disabled':
         return 'This account has been disabled.';
       case 'account-exists-with-different-credential':
         return 'An account already exists with the same email but different sign-in credentials.';
       case 'invalid-credential':
-        return 'Invalid credentials. Please try again.';
+        return 'Invalid email or password. Please try again.';
       case 'popup-closed-by-user':
         return 'Sign-in popup was closed.';
       case 'popup-blocked':

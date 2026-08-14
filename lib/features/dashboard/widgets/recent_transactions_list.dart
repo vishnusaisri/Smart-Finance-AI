@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/expense.dart';
@@ -8,6 +9,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../routes/app_routes.dart';
+import '../../profile/providers/profile_providers.dart';
 
 class RecentTransactionsList extends StatelessWidget {
   final List<Expense> expenses;
@@ -59,13 +61,15 @@ class RecentTransactionsList extends StatelessWidget {
   }
 }
 
-class _TransactionTile extends StatelessWidget {
+class _TransactionTile extends ConsumerWidget {
   final Expense expense;
 
   const _TransactionTile({required this.expense});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfile = ref.watch(userProfileProvider);
+    final symbol = userProfile.getCurrencySymbol();
     final categoryIcon = _getCategoryIcon();
     final categoryColor = _getCategoryColor();
 
@@ -108,7 +112,7 @@ class _TransactionTile extends StatelessWidget {
             ),
           ),
           Text(
-            '-\$${expense.amount.toStringAsFixed(2)}',
+            '-$symbol${expense.amount.toStringAsFixed(2)}',
             style: AppTextStyles.labelLarge.copyWith(
               color: AppColors.danger,
               fontWeight: FontWeight.w600,

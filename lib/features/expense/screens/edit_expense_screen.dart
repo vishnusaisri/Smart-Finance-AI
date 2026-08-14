@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/models/expense.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_textfield.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -102,11 +101,6 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
     return expensesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       data: (expenses) {
-        final expense = expenses.firstWhere(
-          (e) => e.id == widget.expenseId,
-          orElse: () => throw Exception('Expense not found'),
-        );
-
         final categories = ExpenseCategoryService.getAllCategories();
 
         return Scaffold(
@@ -127,7 +121,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
                     label: AppStrings.expenseAmount,
                     controller: _amountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    prefixIcon: const Icon(Icons.attach_money),
+                    prefixText: '₹ ',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter amount';

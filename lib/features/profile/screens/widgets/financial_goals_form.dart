@@ -18,7 +18,7 @@ class FinancialGoalsForm extends ConsumerWidget {
           TextFormField(
             decoration: const InputDecoration(
               labelText: 'Monthly Income',
-              prefixText: '\$',
+              prefixText: '₹',
               border: OutlineInputBorder(),
             ),
             initialValue: '5000',
@@ -28,7 +28,7 @@ class FinancialGoalsForm extends ConsumerWidget {
           TextFormField(
             decoration: const InputDecoration(
               labelText: 'Savings Goal',
-              prefixText: '\$',
+              prefixText: '₹',
               border: OutlineInputBorder(),
             ),
             initialValue: '1000',
@@ -38,7 +38,7 @@ class FinancialGoalsForm extends ConsumerWidget {
           TextFormField(
             decoration: const InputDecoration(
               labelText: 'Emergency Fund Target',
-              prefixText: '\$',
+              prefixText: '₹',
               border: OutlineInputBorder(),
             ),
             initialValue: '10000',

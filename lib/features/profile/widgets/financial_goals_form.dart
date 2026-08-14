@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../providers/profile_providers.dart';
@@ -56,7 +57,8 @@ class _FinancialGoalsFormState extends ConsumerState<FinancialGoalsForm> {
                   filled: true,
                   fillColor: Colors.grey[900],
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 onChanged: (value) {
                   ref.read(financialGoalsFormProvider.notifier).updateMonthlyIncome(value);
                 },
@@ -99,7 +101,8 @@ class _FinancialGoalsFormState extends ConsumerState<FinancialGoalsForm> {
                   filled: true,
                   fillColor: Colors.grey[900],
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 onChanged: (value) {
                   ref.read(financialGoalsFormProvider.notifier).updateSavingsGoal(value);
                 },

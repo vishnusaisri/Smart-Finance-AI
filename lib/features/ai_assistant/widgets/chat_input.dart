@@ -208,7 +208,7 @@ class _ChatInputState extends State<ChatInput> {
             ),
             _buildAttachmentOption(
               context,
-              Icons.attach_money,
+              Icons.currency_rupee,
               'Budget Report',
               () => Navigator.pop(context),
             ),

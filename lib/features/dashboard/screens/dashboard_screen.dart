@@ -46,9 +46,14 @@ class DashboardScreen extends ConsumerWidget {
           (sum, exp) => sum + exp.amount,
         );
 
+        final hasExpenses = expenses.isNotEmpty;
         final savings = monthlyIncome - totalExpenses;
-        final savingsRate = monthlyIncome > 0 ? (savings / monthlyIncome) * 100 : 0.0;
-        final healthScore = _calculateHealthScore(savingsRate, totalExpenses, monthlyIncome);
+        final savingsRate = hasExpenses
+            ? (monthlyIncome > 0 ? (savings / monthlyIncome * 100) : 0.0)
+            : 0.0;
+        final healthScore = _calculateHealthScore(savingsRate, totalExpenses, monthlyIncome, !hasExpenses);
+        final riskLevel = hasExpenses ? _calculateRiskLevel(savingsRate, totalExpenses, monthlyIncome) : 'N/A';
+        final spendingTrend = _calculateSpendingTrend(expenses, monthlyIncome);
 
         final categoryBreakdown = <String, double>{};
 
@@ -58,19 +63,26 @@ class DashboardScreen extends ConsumerWidget {
                   expense.amount;
         }
 
-        // Generate realistic monthly trend from current expenses
+        // Calculate real monthly trend from actual expense data
         final monthlyTrend = <Map<String, dynamic>>[];
-        final now = DateTime.now();
-        for (int i = 5; i >= 0; i--) {
-          final month = now.subtract(Duration(days: i * 30));
-          final monthName = '${month.toString().substring(5, 7)}';
-          // Use current expenses for latest month, estimate for previous months
-          final amount = i == 0 ? totalExpenses : totalExpenses * (0.8 + (i * 0.05));
-          monthlyTrend.add({
-            'month': monthName,
-            'amount': amount,
-            'income': monthlyIncome,
-          });
+        if (expenses.isNotEmpty) {
+          final now = DateTime.now();
+          final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          for (int i = 5; i >= 0; i--) {
+            final targetYear = now.month - i <= 0 ? now.year - 1 : now.year;
+            final targetMonth = ((now.month - 1 - i) % 12 + 12) % 12 + 1;
+            
+            final monthTotal = expenses.where((exp) =>
+              exp.date.year == targetYear && exp.date.month == targetMonth
+            ).fold<double>(0.0, (sum, exp) => sum + exp.amount);
+
+            monthlyTrend.add({
+              'month': monthNames[targetMonth - 1],
+              'amount': monthTotal,
+              'expenses': monthTotal,
+              'income': monthlyIncome,
+            });
+          }
         }
 
         return insightsAsync.when(
@@ -146,6 +158,10 @@ class DashboardScreen extends ConsumerWidget {
                       _buildInsightsAndHealthRow(
                         insights: insights,
                         healthScore: healthScore,
+                        savingsRate: savingsRate,
+                        riskLevel: riskLevel,
+                        spendingTrend: spendingTrend,
+                        hasExpenses: hasExpenses,
                         userGoals:
                             userProfile.goals ?? [],
                         isTablet: isTablet,
@@ -206,8 +222,8 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  double _calculateHealthScore(double savingsRate, double totalExpenses, double monthlyIncome) {
-    if (monthlyIncome == 0) return 50.0;
+  double _calculateHealthScore(double savingsRate, double totalExpenses, double monthlyIncome, [bool hasNoExpenses = false]) {
+    if (monthlyIncome == 0 || hasNoExpenses) return 0.0;
     
     double score = 50.0;
     
@@ -243,17 +259,41 @@ class DashboardScreen extends ConsumerWidget {
   double _calculateSpendingTrend(List<dynamic> expenses, double monthlyIncome) {
     if (expenses.isEmpty || monthlyIncome == 0) return 0.0;
     
-    final totalExpenses = expenses.fold<double>(0, (sum, exp) => sum + (exp is Expense ? exp.amount : 0));
-    final expenseRatio = (totalExpenses / monthlyIncome) * 100;
+    final now = DateTime.now();
+    final prevMonthStart = DateTime(now.month == 1 ? now.year - 1 : now.year, now.month == 1 ? 12 : now.month - 1, 1);
     
-    // Calculate trend as percentage change from ideal (70% of income)
-    final idealRatio = 70.0;
-    return expenseRatio - idealRatio;
+    final currentMonthExpenses = expenses
+        .whereType<Expense>()
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+        
+    final prevMonthExpenses = expenses
+        .whereType<Expense>()
+        .where((e) => e.date.year == prevMonthStart.year && e.date.month == prevMonthStart.month)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    
+    if (prevMonthExpenses == 0) return 0.0;
+    return ((currentMonthExpenses - prevMonthExpenses) / prevMonthExpenses) * 100;
   }
 
-  double _calculateImprovementPercentage(double healthScore) {
-    // Mock improvement calculation - in real app, this would compare with previous month
-    return (healthScore - 50) * 0.5;
+  double _calculateImprovementPercentage(double currentHealthScore, List<dynamic> expenses, double monthlyIncome) {
+    if (expenses.isEmpty || monthlyIncome == 0) return 0.0;
+    
+    final now = DateTime.now();
+    final prevMonthStart = DateTime(now.month == 1 ? now.year - 1 : now.year, now.month == 1 ? 12 : now.month - 1, 1);
+    
+    final prevMonthExpenses = expenses
+        .whereType<Expense>()
+        .where((e) => e.date.year == prevMonthStart.year && e.date.month == prevMonthStart.month)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+        
+    if (prevMonthExpenses == 0) return 0.0;
+    
+    final prevSavings = monthlyIncome - prevMonthExpenses;
+    final prevSavingsRate = (prevSavings / monthlyIncome) * 100;
+    final prevHealthScore = _calculateHealthScore(prevSavingsRate, prevMonthExpenses, monthlyIncome);
+    
+    return currentHealthScore - prevHealthScore;
   }
 
   Widget _buildOverviewCards({
@@ -350,6 +390,10 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildInsightsAndHealthRow({
     required List<dynamic> insights,
     required double healthScore,
+    required double savingsRate,
+    required String riskLevel,
+    required double spendingTrend,
+    required bool hasExpenses,
     required List<FinancialGoal> userGoals,
     required bool isTablet,
     required bool isMobile,
@@ -371,6 +415,10 @@ class DashboardScreen extends ConsumerWidget {
             ),
             child: HealthScoreGauge(
               score: healthScore,
+              savingsRate: savingsRate,
+              riskLevel: riskLevel,
+              trendPercentage: spendingTrend,
+              hasExpenses: hasExpenses,
             ),
           ),
 
@@ -403,6 +451,10 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   child: HealthScoreGauge(
                     score: healthScore,
+                    savingsRate: savingsRate,
+                    riskLevel: riskLevel,
+                    trendPercentage: spendingTrend,
+                    hasExpenses: hasExpenses,
                   ),
                 ),
               ),
@@ -442,6 +494,10 @@ class DashboardScreen extends ConsumerWidget {
             ),
             child: HealthScoreGauge(
               score: healthScore,
+              savingsRate: savingsRate,
+              riskLevel: riskLevel,
+              trendPercentage: spendingTrend,
+              hasExpenses: hasExpenses,
             ),
           ),
         ),

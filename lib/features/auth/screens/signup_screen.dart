@@ -9,7 +9,6 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/validation_utils.dart';
 import '../../../routes/app_routes.dart';
-import '../../../core/services/cache_service.dart';
 import '../controllers/auth_controller.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {

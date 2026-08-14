@@ -117,7 +117,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'add',
                 name: 'addExpense',
-                builder: (context, state) => const AddExpenseScreen(),
+                builder: (context, state) {
+                  final category = state.uri.queryParameters['category'] ?? state.extra as String?;
+                  return AddExpenseScreen(initialCategory: category);
+                },
               ),
               GoRoute(
                 path: ':id',
