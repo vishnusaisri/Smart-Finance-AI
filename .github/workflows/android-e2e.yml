@@ -82,8 +82,8 @@ jobs:
         with:
           name: android-appium-test-reports-excel-and-html
           path: |
-            Smart Finance AI Appium/Test_Results/Excel/excel-report.xlsx
-            Smart Finance AI Appium/Test_Results/HTML/execution-report.html
+            Smart Finance AI Appium/Test_Results/Excel/*.xlsx
+            Smart Finance AI Appium/Test_Results/HTML/*.html
 
       - name: Deploy Reports to GitHub Pages (gh-pages Branch)
         if: always()

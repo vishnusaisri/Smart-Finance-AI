@@ -147,8 +147,10 @@ class ExcelReporter {
     if (!fs.existsSync(excelOutputDir)) fs.mkdirSync(excelOutputDir, { recursive: true });
     if (!fs.existsSync(htmlOutputDir)) fs.mkdirSync(htmlOutputDir, { recursive: true });
 
-    const excelFilePath = path.join(excelOutputDir, 'selenium-report.xlsx');
+    const excelFilePath = path.join(excelOutputDir, 'excel-report.xlsx');
+    const legacyExcelPath = path.join(excelOutputDir, 'selenium-report.xlsx');
     await workbook.xlsx.writeFile(excelFilePath);
+    await workbook.xlsx.writeFile(legacyExcelPath);
     console.log(`\n[Excel Reporter] Saved report to: ${excelFilePath}`);
 
     const htmlFilePath = path.join(htmlOutputDir, 'execution-report.html');

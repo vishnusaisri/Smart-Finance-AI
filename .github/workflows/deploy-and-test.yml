@@ -78,8 +78,8 @@ jobs:
         with:
           name: web-e2e-test-reports-excel-and-html
           path: |
-            Smart Finance AI E2E/Test_Results/Excel/excel-report.xlsx
-            Smart Finance AI E2E/Test_Results/HTML/execution-report.html
+            Smart Finance AI E2E/Test_Results/Excel/*.xlsx
+            Smart Finance AI E2E/Test_Results/HTML/*.html
 
       - name: Deploy to GitHub Pages (Branch Mode)
         uses: peaceiris/actions-gh-pages@v3
