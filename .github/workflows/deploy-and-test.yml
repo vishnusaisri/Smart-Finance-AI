@@ -63,11 +63,23 @@ jobs:
           npm test
 
       - name: Inject E2E Reports into Web Dist
+        if: always()
         run: |
           mkdir -p dist/reports/latest
           mkdir -p "dist/reports/history/build-${{ github.run_number }}"
-          cp "Smart Finance AI E2E/Test_Results/HTML/execution-report.html" dist/reports/latest/execution-report.html
-          cp "Smart Finance AI E2E/Test_Results/HTML/execution-report.html" "dist/reports/history/build-${{ github.run_number }}/execution-report.html"
+          cp "Smart Finance AI E2E/Test_Results/HTML/execution-report.html" dist/reports/latest/execution-report.html || true
+          cp "Smart Finance AI E2E/Test_Results/HTML/execution-report.html" "dist/reports/history/build-${{ github.run_number }}/execution-report.html" || true
+          cp "Smart Finance AI E2E/Test_Results/Excel/excel-report.xlsx" dist/reports/latest/excel-report.xlsx || true
+          cp "Smart Finance AI E2E/Test_Results/Excel/excel-report.xlsx" "dist/reports/history/build-${{ github.run_number }}/excel-report.xlsx" || true
+
+      - name: Upload E2E Test Reports Artifacts (Excel & HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-e2e-test-reports-excel-and-html
+          path: |
+            Smart Finance AI E2E/Test_Results/Excel/excel-report.xlsx
+            Smart Finance AI E2E/Test_Results/HTML/execution-report.html
 
       - name: Deploy to GitHub Pages (Branch Mode)
         uses: peaceiris/actions-gh-pages@v3
@@ -110,6 +122,8 @@ jobs:
           echo "| **Status** | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| **GitHub Run** | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### 📊 Live E2E Reports:" >> $GITHUB_STEP_SUMMARY
-          echo "- 🌐 **Latest Execution Report**: [View Live Report](${{ steps.deployment.outputs.page_url }}reports/latest/execution-report.html)" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📊 Test Reports & Excel Sheets:" >> $GITHUB_STEP_SUMMARY
+          echo "- 📥 **Excel Spreadsheet Report (.xlsx)**: Available under **Artifacts** tab (`web-e2e-test-reports-excel-and-html`)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Excel Download Link**: [Download excel-report.xlsx](${{ steps.deployment.outputs.page_url }}reports/latest/excel-report.xlsx)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 **Latest Execution HTML Report**: [View Live HTML Report](${{ steps.deployment.outputs.page_url }}reports/latest/execution-report.html)" >> $GITHUB_STEP_SUMMARY
           echo "- 📜 **Build History Report**: [View Build #${{ github.run_number }} Report](${{ steps.deployment.outputs.page_url }}reports/history/build-${{ github.run_number }}/execution-report.html)" >> $GITHUB_STEP_SUMMARY

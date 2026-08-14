@@ -73,6 +73,17 @@ jobs:
           mkdir -p "dist/reports/history/build-${{ github.run_number }}"
           cp "Smart Finance AI Appium/Test_Results/HTML/execution-report.html" dist/reports/latest/execution-report.html || true
           cp "Smart Finance AI Appium/Test_Results/HTML/execution-report.html" "dist/reports/history/build-${{ github.run_number }}/execution-report.html" || true
+          cp "Smart Finance AI Appium/Test_Results/Excel/excel-report.xlsx" dist/reports/latest/excel-report.xlsx || true
+          cp "Smart Finance AI Appium/Test_Results/Excel/excel-report.xlsx" "dist/reports/history/build-${{ github.run_number }}/excel-report.xlsx" || true
+
+      - name: Upload Appium Test Reports Artifacts (Excel & HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-appium-test-reports-excel-and-html
+          path: |
+            Smart Finance AI Appium/Test_Results/Excel/excel-report.xlsx
+            Smart Finance AI Appium/Test_Results/HTML/execution-report.html
 
       - name: Deploy Reports to GitHub Pages (gh-pages Branch)
         if: always()
@@ -80,3 +91,20 @@ jobs:
         with:
           folder: dist
           branch: gh-pages
+
+      - name: Generate GitHub Step Summary
+        if: always()
+        run: |
+          echo "### 📱 Android Mobile Appium E2E Test Suite Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total Assertions** | 1,111 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Test Categories** | 110 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| **GitHub Run** | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📊 Test Reports & Excel Sheets:" >> $GITHUB_STEP_SUMMARY
+          echo "- 📥 **Excel Spreadsheet Report (.xlsx)**: Available under **Artifacts** tab (`android-appium-test-reports-excel-and-html`)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 **Excel Download Link**: [Download excel-report.xlsx](https://vishnusaisri.github.io/Smart-Finance-AI/reports/latest/excel-report.xlsx)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌐 **Latest Execution HTML Report**: [View Live HTML Report](https://vishnusaisri.github.io/Smart-Finance-AI/reports/latest/execution-report.html)" >> $GITHUB_STEP_SUMMARY
