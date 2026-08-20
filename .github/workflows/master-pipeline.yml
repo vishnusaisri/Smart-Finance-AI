@@ -35,27 +35,27 @@ jobs:
           cd "Smart Finance AI E2E"
           npm install
 
-      - name: Generate All Test Projects & Excel Reports
+      - name: Generate All 4 Category Excel Reports
         run: |
           node scripts/generate_projects_and_reports.js
+          python scripts/package_test_zip.py
+          node scripts/prepare_github_artifacts.js
 
       - name: Execute Pytest Suite (All Categories)
         run: |
           pytest tests/ --html=reports/master_test_report.html --self-contained-html || true
 
-      - name: Build Downloadable ZIP Archive
-        run: |
-          python scripts/package_test_zip.py
-
-      - name: Upload Complete Test Suite ZIP & Excel Artifacts
+      - name: Upload All 4 Test Reports (Excel, CSV, HTML, ZIP)
         uses: actions/upload-artifact@v4
         with:
-          name: Smart_Finance_AI_Full_Test_Suite_Artifacts
+          name: All_4_Categories_Test_Reports_Excel_And_HTML
           path: |
-            smart_finance_ai_test_suite.zip
-            Excel_Reports/All_Test_Results_Master.xlsx
             Android_Appium_Test_Report.xlsx
             Web_E2E_Test_Report.xlsx
             Vulnerability_Security_Test_Report.xlsx
             Load_Performance_Test_Report.xlsx
+            Excel_Reports/All_Test_Results_Master.xlsx
+            smart_finance_ai_test_suite.zip
             K6_LOAD_TESTING_GUIDE.md
+            Smart Finance AI E2E/Test_Results/CSV/*.csv
+            Smart Finance AI E2E/Test_Results/HTML/*.html

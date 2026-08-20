@@ -15,29 +15,45 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
+      - name: Install Node Dependencies
+        run: |
+          cd "Smart Finance AI E2E"
+          npm install
+
+      - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt || true
 
-      - name: Generate Load Scenarios & Master Matrix
+      - name: Generate All 4 Category Excel Reports (including 300 Load Cases)
         run: |
-          python scripts/generate_load_scenarios.py
+          node scripts/generate_projects_and_reports.js
+          python scripts/package_test_zip.py || true
 
       - name: Run 300 Load Test Verification
         run: |
           pytest tests/load/test_load_scenarios.py --html=reports/load_test_report.html --self-contained-html || true
 
-      - name: Upload Load Testing Report Artifacts
+      - name: Upload All 4 Test Reports (Excel, CSV, HTML, ZIP)
         uses: actions/upload-artifact@v4
         with:
-          name: load-testing-report
+          name: All_4_Categories_Test_Reports_Excel_And_HTML
           path: |
-            reports/load_test_report.html
-            reports/master_test_cases.csv
-            tests/load/load_scenarios_300.json
+            Load_Performance_Test_Report.xlsx
+            Vulnerability_Security_Test_Report.xlsx
+            Android_Appium_Test_Report.xlsx
+            Web_E2E_Test_Report.xlsx
+            Excel_Reports/All_Test_Results_Master.xlsx
+            smart_finance_ai_test_suite.zip
+            Load_Performance_Test_Report_Test_Cases.csv
+            Smart Finance AI Load/load_scenarios_300.json

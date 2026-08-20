@@ -15,6 +15,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js & Dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node Dependencies
+        run: |
+          cd "Smart Finance AI E2E"
+          npm install
+
       - name: Install Grafana k6
         run: |
           sudo gpg -k
@@ -23,25 +38,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y k6
 
-      - name: Setup Node.js & Dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Generate 300 Load Test Scenarios & Master Reports
+      - name: Generate All 4 Category Excel Reports (including 300 Load Cases)
         run: |
           node scripts/generate_projects_and_reports.js
+          python scripts/package_test_zip.py || true
 
       - name: Run k6 Load Test Suite
         run: |
           k6 run tests/load/k6_load_suite.js || true
 
-      - name: Upload Load Test Reports Artifacts
+      - name: Upload All 4 Test Reports (Excel, CSV, HTML, ZIP)
         uses: actions/upload-artifact@v4
         with:
-          name: Load_Performance_Test_Artifacts
+          name: All_4_Categories_Test_Reports_Excel_And_HTML
           path: |
             Load_Performance_Test_Report.xlsx
+            Vulnerability_Security_Test_Report.xlsx
+            Android_Appium_Test_Report.xlsx
+            Web_E2E_Test_Report.xlsx
+            Excel_Reports/All_Test_Results_Master.xlsx
+            smart_finance_ai_test_suite.zip
             Load_Performance_Test_Report_Test_Cases.csv
-            Load_Performance_Test_Report_Summary.csv
             Smart Finance AI Load/load_scenarios_300.json
