@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,8 @@ import '../../../routes/app_routes.dart';
 import '../controllers/budget_controller.dart';
 import '../../../core/models/budget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../profile/providers/profile_providers.dart';
+import '../../expense/controllers/expense_controller.dart';
 
 class BudgetScreen extends ConsumerStatefulWidget {
   const BudgetScreen({super.key});
@@ -270,89 +273,157 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       return;
     }
 
+    final userProfile = ref.read(userProfileProvider);
+    final expenses = ref.read(expensesListProvider);
+    final symbol = userProfile.getCurrencySymbol();
+    final now = DateTime.now();
+    final currentMonthExpenses = expenses
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    final availableWalletBalance = userProfile.monthlyIncome > 0
+        ? (userProfile.monthlyIncome - currentMonthExpenses)
+        : 0.0;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Create Budget'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: categoryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    hintText: 'e.g., Food, Shopping, Entertainment',
+        builder: (context, setState) {
+          final typedAmount = double.tryParse(amountController.text.trim()) ?? 0.0;
+          final isExceedingWallet = userProfile.monthlyIncome > 0 && typedAmount > availableWalletBalance;
+
+          return AlertDialog(
+            title: const Text('Create Budget'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isExceedingWallet ? Colors.red.withOpacity(0.15) : Colors.blue.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isExceedingWallet ? Colors.red.withOpacity(0.4) : Colors.blue.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isExceedingWallet ? Icons.warning_amber_rounded : Icons.account_balance_wallet,
+                          color: isExceedingWallet ? Colors.redAccent : Colors.blueAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Available Wallet Balance: $symbol${availableWalletBalance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isExceedingWallet ? Colors.redAccent : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Budget Amount',
-                    hintText: 'e.g., 50000',
-                    prefixText: '₹',
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: categoryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      hintText: 'e.g., Food, Shopping, Entertainment',
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                DropdownButtonFormField<BudgetPeriod>(
-                  value: selectedPeriod,
-                  decoration: const InputDecoration(labelText: 'Period'),
-                  items: BudgetPeriod.values.map((period) {
-                    return DropdownMenuItem(
-                      value: period,
-                      child: Text(period.name.capitalize()),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedPeriod = value;
-                      });
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: 'Budget Amount',
+                      hintText: 'e.g., 5000',
+                      prefixText: '$symbol ',
+                    ),
+                  ),
+                  if (isExceedingWallet) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '⚠️ Budget ($symbol${typedAmount.toStringAsFixed(0)}) cannot exceed available wallet balance ($symbol${availableWalletBalance.toStringAsFixed(0)}).',
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  DropdownButtonFormField<BudgetPeriod>(
+                    value: selectedPeriod,
+                    decoration: const InputDecoration(labelText: 'Period'),
+                    items: BudgetPeriod.values.map((period) {
+                      return DropdownMenuItem(
+                        value: period,
+                        child: Text(period.name.capitalize()),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedPeriod = value;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (categoryController.text.isNotEmpty && amountController.text.isNotEmpty) {
+                    final amount = double.tryParse(amountController.text);
+                    if (amount == null || amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a valid budget amount')),
+                      );
+                      return;
                     }
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (categoryController.text.isNotEmpty && amountController.text.isNotEmpty) {
-                  final amount = double.tryParse(amountController.text);
-                  if (amount == null || amount <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a valid budget amount')),
+                    
+                    if (userProfile.monthlyIncome > 0 && amount > availableWalletBalance) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Cannot create budget! Amount ($symbol${amount.toStringAsFixed(0)}) exceeds wallet balance ($symbol${availableWalletBalance.toStringAsFixed(0)}).'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    final budget = Budget(
+                      id: const Uuid().v4(),
+                      userId: currentUser.uid,
+                      category: categoryController.text,
+                      amount: amount,
+                      spent: 0,
+                      period: selectedPeriod,
+                      startDate: DateTime.now(),
                     );
-                    return;
+                    ref.read(budgetProvider.notifier).saveBudget(budget);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Budget created successfully')),
+                    );
                   }
-                  
-                  final budget = Budget(
-                    id: const Uuid().v4(),
-                    userId: currentUser.uid,
-                    category: categoryController.text,
-                    amount: amount,
-                    spent: 0,
-                    period: selectedPeriod,
-                    startDate: DateTime.now(),
-                  );
-                  ref.read(budgetProvider.notifier).saveBudget(budget);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Budget created successfully')),
-                  );
-                }
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        ),
+                },
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -362,72 +433,141 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     final amountController = TextEditingController(text: budget.amount.toString());
     BudgetPeriod selectedPeriod = budget.period;
 
+    final userProfile = ref.read(userProfileProvider);
+    final expenses = ref.read(expensesListProvider);
+    final symbol = userProfile.getCurrencySymbol();
+    final now = DateTime.now();
+    final currentMonthExpenses = expenses
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    final availableWalletBalance = userProfile.monthlyIncome > 0
+        ? (userProfile.monthlyIncome - currentMonthExpenses)
+        : 0.0;
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Edit Budget'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: categoryController,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Budget Amount',
-                    prefixText: '₹',
+        builder: (context, setState) {
+          final typedAmount = double.tryParse(amountController.text.trim()) ?? 0.0;
+          final isExceedingWallet = userProfile.monthlyIncome > 0 && typedAmount > availableWalletBalance;
+
+          return AlertDialog(
+            title: const Text('Edit Budget'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isExceedingWallet ? Colors.red.withOpacity(0.15) : Colors.blue.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isExceedingWallet ? Colors.red.withOpacity(0.4) : Colors.blue.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isExceedingWallet ? Icons.warning_amber_rounded : Icons.account_balance_wallet,
+                          color: isExceedingWallet ? Colors.redAccent : Colors.blueAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Available Wallet Balance: $symbol${availableWalletBalance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isExceedingWallet ? Colors.redAccent : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                DropdownButtonFormField<BudgetPeriod>(
-                  value: selectedPeriod,
-                  decoration: const InputDecoration(labelText: 'Period'),
-                  items: BudgetPeriod.values.map((period) {
-                    return DropdownMenuItem(
-                      value: period,
-                      child: Text(period.name.capitalize()),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: categoryController,
+                    decoration: const InputDecoration(labelText: 'Category'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: 'Budget Amount',
+                      prefixText: '$symbol ',
+                    ),
+                  ),
+                  if (isExceedingWallet) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '⚠️ Budget ($symbol${typedAmount.toStringAsFixed(0)}) cannot exceed available wallet balance ($symbol${availableWalletBalance.toStringAsFixed(0)}).',
+                      style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  DropdownButtonFormField<BudgetPeriod>(
+                    value: selectedPeriod,
+                    decoration: const InputDecoration(labelText: 'Period'),
+                    items: BudgetPeriod.values.map((period) {
+                      return DropdownMenuItem(
+                        value: period,
+                        child: Text(period.name.capitalize()),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedPeriod = value;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final amount = double.tryParse(amountController.text) ?? budget.amount;
+                  if (userProfile.monthlyIncome > 0 && amount > availableWalletBalance) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Cannot update budget! Amount ($symbol${amount.toStringAsFixed(0)}) exceeds wallet balance ($symbol${availableWalletBalance.toStringAsFixed(0)}).'),
+                        backgroundColor: Colors.red,
+                      ),
                     );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedPeriod = value;
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final updatedBudget = budget.copyWith(
-                  category: categoryController.text,
-                  amount: double.tryParse(amountController.text) ?? budget.amount,
-                  period: selectedPeriod,
-                  updatedAt: DateTime.now(),
-                );
-                ref.read(budgetProvider.notifier).saveBudget(updatedBudget);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Budget updated successfully')),
-                );
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
+                    return;
+                  }
+
+                  final updatedBudget = budget.copyWith(
+                    category: categoryController.text,
+                    amount: amount,
+                    period: selectedPeriod,
+                    updatedAt: DateTime.now(),
+                  );
+                  ref.read(budgetProvider.notifier).saveBudget(updatedBudget);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Budget updated successfully')),
+                  );
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

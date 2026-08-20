@@ -1,0 +1,14 @@
+{
+  "name": "smart-finance-ai-load-suite",
+  "version": "1.0.0",
+  "description": "300 Unique Scenario Load & Performance Testing Suite",
+  "main": "index.js",
+  "scripts": {
+    "test:load": "node tests/run_load_suite.js",
+    "test:locust": "locust -f locustfile.py --host=http://localhost:49390",
+    "test:k6": "k6 run k6_load_suite.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}

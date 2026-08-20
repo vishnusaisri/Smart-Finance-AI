@@ -11,6 +11,7 @@ class FinancialOverviewCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final double trend;
+  final String currencySymbol;
 
   const FinancialOverviewCard({
     super.key,
@@ -19,6 +20,7 @@ class FinancialOverviewCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.trend,
+    this.currencySymbol = '₹',
   });
 
   @override
@@ -97,12 +99,18 @@ class FinancialOverviewCard extends StatelessWidget {
   }
 
   String _formatCurrency(double amount) {
-    if (amount >= 100000) {
-      return '₹${(amount / 100000).toStringAsFixed(1)}L';
+    final isNegative = amount < 0;
+    final absAmount = amount.abs();
+
+    String formatted;
+    if (absAmount >= 100000) {
+      formatted = '$currencySymbol${(absAmount / 100000).toStringAsFixed(1)}L';
+    } else if (absAmount >= 1000) {
+      formatted = '$currencySymbol${(absAmount / 1000).toStringAsFixed(1)}k';
+    } else {
+      formatted = '$currencySymbol${absAmount.toStringAsFixed(0)}';
     }
-    if (amount >= 1000) {
-      return '₹${(amount / 1000).toStringAsFixed(1)}k';
-    }
-    return '₹${amount.toStringAsFixed(0)}';
+
+    return isNegative ? '-$formatted' : formatted;
   }
 }

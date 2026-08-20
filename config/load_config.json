@@ -1,0 +1,12 @@
+{
+  "target_host": "http://localhost:49390",
+  "total_scenarios": 300,
+  "default_users": 50,
+  "spawn_rate": 10,
+  "run_duration": "5m",
+  "thresholds": {
+    "response_time_p95_ms": 500,
+    "error_rate_percent": 1.0,
+    "throughput_req_per_sec": 100
+  }
+}

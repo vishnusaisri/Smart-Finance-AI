@@ -1,0 +1,11 @@
+{
+  "web_url": "http://localhost:49390",
+  "browser": "chrome",
+  "headless": true,
+  "window_width": 1920,
+  "window_height": 1080,
+  "implicit_wait": 10,
+  "explicit_wait": 15,
+  "base_api_url": "http://localhost:49390/api",
+  "screenshots_dir": "./reports/screenshots"
+}

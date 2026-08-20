@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import '../models/user_profile.dart';
 
+import 'preferences_service.dart';
+
 class CacheService {
   static const String _themeKey = 'theme_mode';
   static const String _onboardingKey = 'onboarding_completed';
@@ -19,7 +21,15 @@ class CacheService {
   SharedPreferences? _prefs;
   bool _isInitialized = false;
 
+  CacheService([SharedPreferences? prefs])
+      : _prefs = prefs,
+        _isInitialized = prefs != null;
+
   Future<void> init() async {
+    if (_prefs != null) {
+      _isInitialized = true;
+      return;
+    }
     _prefs = await SharedPreferences.getInstance();
     _isInitialized = true;
   }
@@ -205,12 +215,16 @@ class CacheService {
 }
 
 final cacheServiceProvider = Provider<CacheService>((ref) {
-  final service = CacheService();
-  // Initialize synchronously before returning
-  service.init().catchError((e) {
-    debugPrint('CacheService initialization error: $e');
-  });
-  return service;
+  try {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return CacheService(prefs);
+  } catch (_) {
+    final service = CacheService();
+    service.init().catchError((e) {
+      debugPrint('CacheService initialization error: $e');
+    });
+    return service;
+  }
 });
 
 // Provider for onboarding status

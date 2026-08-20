@@ -1,10 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/ai_insight.dart';
 import '../../expense/controllers/expense_controller.dart';
+import '../../profile/providers/profile_providers.dart';
 
 // AI Insights Provider - generates real insights based on actual expense data
 final aiInsightsProvider = FutureProvider<List<AIInsight>>((ref) async {
   final expensesAsync = ref.watch(expensesProvider);
+  final userProfile = ref.watch(userProfileProvider);
+  final symbol = userProfile.getCurrencySymbol();
 
   return expensesAsync.when(
     loading: () => [],
@@ -64,10 +67,10 @@ final aiInsightsProvider = FutureProvider<List<AIInsight>>((ref) async {
         insights.add(AIInsight(
           id: 'weekly-spend',
           userId: userId,
-          title: 'Weekly Spending: \$${weekTotal.toStringAsFixed(0)}',
-          description: 'You\'re spending an average of \$${dailyAvg.toStringAsFixed(0)}/day this week across ${weekExpenses.length} transactions.',
+          title: 'Weekly Spending: $symbol${weekTotal.toStringAsFixed(0)}',
+          description: 'You\'re spending an average of $symbol${dailyAvg.toStringAsFixed(0)}/day this week across ${weekExpenses.length} transactions.',
           type: weekTotal > monthTotal / 4 ? InsightType.warning : InsightType.success,
-          timestamp: DateTime.now(),
+          timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
         ));
       }
 
@@ -78,9 +81,9 @@ final aiInsightsProvider = FutureProvider<List<AIInsight>>((ref) async {
           id: 'top-category',
           userId: userId,
           title: 'Top Category: $topCategory',
-          description: '$topCategory accounts for $percentage% of your total spending (\$${topAmount.toStringAsFixed(0)}).',
+          description: '$topCategory accounts for $percentage% of your total spending ($symbol${topAmount.toStringAsFixed(0)}).',
           type: double.parse(percentage) > 50 ? InsightType.warning : InsightType.info,
-          timestamp: DateTime.now(),
+          timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
         ));
       }
 
@@ -89,10 +92,10 @@ final aiInsightsProvider = FutureProvider<List<AIInsight>>((ref) async {
         insights.add(AIInsight(
           id: 'monthly-total',
           userId: userId,
-          title: 'Monthly Total: \$${monthTotal.toStringAsFixed(0)}',
-          description: 'You\'ve logged ${monthExpenses.length} expenses this month with an average of \$${(monthTotal / monthExpenses.length).toStringAsFixed(0)} each.',
+          title: 'Monthly Total: $symbol${monthTotal.toStringAsFixed(0)}',
+          description: 'You\'ve logged ${monthExpenses.length} expenses this month with an average of $symbol${(monthTotal / monthExpenses.length).toStringAsFixed(0)} each.',
           type: InsightType.info,
-          timestamp: DateTime.now(),
+          timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
         ));
       }
 
@@ -103,9 +106,9 @@ final aiInsightsProvider = FutureProvider<List<AIInsight>>((ref) async {
           id: 'large-expenses',
           userId: userId,
           title: '${largeExpenses.length} Large Transactions',
-          description: 'You have ${largeExpenses.length} expenses above \$${(avgPerExpense * 2).toStringAsFixed(0)}. Review them to find potential savings.',
+          description: 'You have ${largeExpenses.length} expenses above $symbol${(avgPerExpense * 2).toStringAsFixed(0)}. Review them to find potential savings.',
           type: InsightType.warning,
-          timestamp: DateTime.now(),
+          timestamp: DateTime.now().subtract(const Duration(minutes: 12)),
         ));
       }
 

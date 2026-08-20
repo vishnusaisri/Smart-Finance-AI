@@ -1,0 +1,17 @@
+{
+  "appium_server_url": "http://127.0.0.1:4723",
+  "platformName": "Android",
+  "automationName": "UiAutomator2",
+  "deviceName": "Android Emulator",
+  "app": "./build/app/outputs/flutter-apk/app-release.apk",
+  "appPackage": "com.smartfinance.ai",
+  "appActivity": "com.smartfinance.ai.MainActivity",
+  "implicit_wait": 10,
+  "explicit_wait": 15,
+  "capabilities": {
+    "noReset": false,
+    "fullReset": false,
+    "autoGrantPermissions": true,
+    "newCommandTimeout": 300
+  }
+}

@@ -13,7 +13,6 @@ class UserProfileNotifier extends Notifier<UserProfile> {
 
   @override
   UserProfile build() {
-
     _cacheService = ref.watch(
       cacheServiceProvider,
     );
@@ -22,6 +21,11 @@ class UserProfileNotifier extends Notifier<UserProfile> {
         FirebaseAuth.instance.currentUser;
 
     _loadProfile();
+
+    final cached = _cacheService.getUserProfile();
+    if (cached != null) {
+      return cached;
+    }
 
     return UserProfile(
       uid: firebaseUser?.uid ?? '',
@@ -45,21 +49,24 @@ class UserProfileNotifier extends Notifier<UserProfile> {
   }
 
   Future<void> _loadProfile() async {
-
     try {
-
-      final cachedProfile =
-          _cacheService.getUserProfile();
-
+      final cachedProfile = _cacheService.getUserProfile();
       if (cachedProfile != null) {
         state = cachedProfile;
       }
 
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null && firebaseUser.uid.isNotEmpty) {
+        final remoteProfile = await ref
+            .read(userProfileServiceProvider)
+            .getUserProfile(firebaseUser.uid);
+        if (remoteProfile != null) {
+          state = remoteProfile;
+          await _cacheService.saveUserProfile(remoteProfile);
+        }
+      }
     } catch (e) {
-
-      debugPrint(
-        'Failed to load cached profile: $e',
-      );
+      debugPrint('Failed to load profile: $e');
     }
   }
 

@@ -486,7 +486,7 @@ Example:
         title: 'High $topCategoryName Spending',
         description: '$topCategoryName at $symbol${topCategoryAmount.toStringAsFixed(0)} is ${categoryPercentage.toStringAsFixed(0)}% of income. Consider reducing by 10% to save $symbol${(topCategoryAmount * 0.1).toStringAsFixed(0)}/month.',
         type: InsightType.warning,
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
       ));
     }
 
@@ -498,7 +498,7 @@ Example:
         title: 'Excellent Savings Rate!',
         description: 'Your ${savingsRate.toStringAsFixed(1)}% savings rate is excellent! Keep building your emergency fund.',
         type: InsightType.success,
-        timestamp: DateTime.now().subtract(const Duration(hours: 5)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
       ));
     } else if (savingsRate < 10) {
       insights.add(AIInsight(
@@ -507,7 +507,7 @@ Example:
         title: 'Low Savings Rate',
         description: 'Your ${savingsRate.toStringAsFixed(1)}% savings rate is below recommended 20%. Aim to save at least $symbol${(monthlyIncome * 0.2).toStringAsFixed(0)}/month.',
         type: InsightType.alert,
-        timestamp: DateTime.now().subtract(const Duration(hours: 5)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
       ));
     }
 
@@ -519,7 +519,7 @@ Example:
         title: 'Strong Financial Health',
         description: 'Your health score of ${healthScore.toStringAsFixed(0)}/100 shows great financial management. Consider increasing investments.',
         type: InsightType.success,
-        timestamp: DateTime.now().subtract(const Duration(hours: 8)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
       ));
     } else if (healthScore < 50) {
       insights.add(AIInsight(
@@ -528,7 +528,7 @@ Example:
         title: 'Financial Health Alert',
         description: 'Your health score of ${healthScore.toStringAsFixed(0)}/100 needs attention. Focus on reducing expenses and increasing savings.',
         type: InsightType.alert,
-        timestamp: DateTime.now().subtract(const Duration(hours: 8)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
       ));
     }
 
@@ -540,7 +540,7 @@ Example:
         title: 'Investment Opportunity',
         description: 'With your ${savingsRate.toStringAsFixed(1)}% savings rate, you could invest $symbol${(monthlyIncome * savingsRate / 100).toStringAsFixed(0)}/month in index funds.',
         type: InsightType.opportunity,
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 12)),
       ));
     }
 
@@ -551,7 +551,7 @@ Example:
       title: 'Track Your Spending',
       description: 'Continue tracking expenses in $topCategoryName to identify patterns and optimize your budget.',
       type: InsightType.tip,
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
+      timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
     ));
 
     return insights.take(5).toList();
@@ -564,7 +564,7 @@ Example:
     required double savingsRate,
     required int transactionCount,
   }) {
-    return 'You\'re doing great! With a ${savingsRate.toStringAsFixed(1)}% savings rate and \$${monthlyIncome.toStringAsFixed(0)} monthly income, you\'re on track to meet your financial goals. Consider optimizing your top spending categories to save even more.';
+    return 'You\'re doing great! With a ${savingsRate.toStringAsFixed(1)}% savings rate and ₹${monthlyIncome.toStringAsFixed(0)} monthly income, you\'re on track to meet your financial goals. Consider optimizing your top spending categories to save even more.';
   }
 
   /// Generate mock answer

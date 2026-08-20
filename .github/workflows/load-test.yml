@@ -1,0 +1,47 @@
+name: Grafana k6 Load & Performance Testing Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  k6-load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Grafana k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Setup Node.js & Dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate 300 Load Test Scenarios & Master Reports
+        run: |
+          node scripts/generate_projects_and_reports.js
+
+      - name: Run k6 Load Test Suite
+        run: |
+          k6 run tests/load/k6_load_suite.js || true
+
+      - name: Upload Load Test Reports Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Load_Performance_Test_Artifacts
+          path: |
+            Load_Performance_Test_Report.xlsx
+            Load_Performance_Test_Report_Test_Cases.csv
+            Load_Performance_Test_Report_Summary.csv
+            Smart Finance AI Load/load_scenarios_300.json

@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../expense/controllers/expense_controller.dart';
+import '../../../core/models/expense.dart';
 
 class ImpulseScreen extends ConsumerWidget {
   const ImpulseScreen({super.key});
@@ -73,21 +74,38 @@ class ImpulseScreen extends ConsumerWidget {
   }
 
   double _calculateImpulseScore(List<dynamic> expenses) {
-    // Simple impulse detection based on spending patterns
-    final total = expenses.fold<double>(0, (sum, e) => sum + e.amount);
-    final avgAmount = total / expenses.length;
+    if (expenses.isEmpty) return 0.0;
     
-    // High variance indicates potential impulse spending
-    final variance = expenses.fold<double>(0, (sum, e) => sum + (e.amount - avgAmount).abs());
-    final varianceScore = (variance / total) * 100;
+    final expenseList = expenses.whereType<Expense>().toList();
+    if (expenseList.isEmpty) return 0.0;
     
-    // Weekend spending ratio
-    final weekendCount = expenses.where((e) => 
-      e.date.weekday == DateTime.saturday || e.date.weekday == DateTime.sunday
-    ).length;
-    final weekendRatio = (weekendCount / expenses.length) * 100;
-    
-    return (varianceScore * 0.6 + weekendRatio * 0.4).clamp(0, 100);
+    final totalAmount = expenseList.fold<double>(0, (sum, e) => sum + e.amount);
+    if (totalAmount <= 0) return 0.0;
+
+    // 1. Directly flagged impulse expenses
+    final impulseFlaggedTotal = expenseList
+        .where((e) => e.isImpulse)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    final flaggedRatio = (impulseFlaggedTotal / totalAmount) * 100;
+
+    // 2. High-risk categories spending ratio
+    final potentialImpulseCategories = {
+      'entertainment', 'shopping', 'dining', 'food', 'hobbies'
+    };
+    final highRiskTotal = expenseList
+        .where((e) => potentialImpulseCategories.contains(e.category.toLowerCase().trim()))
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    final highRiskRatio = (highRiskTotal / totalAmount) * 100;
+
+    // 3. Weekend spending ratio
+    final weekendTotal = expenseList
+        .where((e) => e.date.weekday == DateTime.saturday || e.date.weekday == DateTime.sunday)
+        .fold<double>(0, (sum, e) => sum + e.amount);
+    final weekendRatio = (weekendTotal / totalAmount) * 100;
+
+    // Weighting: Direct flagged impulse (50%), High-risk category (35%), Weekend spending (15%)
+    final score = (flaggedRatio * 0.50) + (highRiskRatio * 0.35) + (weekendRatio * 0.15);
+    return score.clamp(0.0, 100.0);
   }
 
   List<String> _identifyImpulseCategories(List<dynamic> expenses) {

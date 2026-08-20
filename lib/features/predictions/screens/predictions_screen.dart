@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -10,6 +11,11 @@ import '../../profile/providers/profile_providers.dart';
 
 class PredictionsScreen extends ConsumerWidget {
   const PredictionsScreen({super.key});
+
+  String _formatAmount(double amount, String currencySymbol) {
+    final formatter = NumberFormat.decimalPattern();
+    return '$currencySymbol${formatter.format(amount.round())}';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,7 +112,7 @@ class PredictionsScreen extends ConsumerWidget {
               Expanded(
                 child: _PredictionCard(
                   label: 'Annual Savings',
-                  value: '$currencySymbol${projectedAnnualSavings.toStringAsFixed(0)}',
+                  value: _formatAmount(projectedAnnualSavings, currencySymbol),
                   subtitle: 'projected',
                   color: AppColors.primary,
                 ),
@@ -151,19 +157,19 @@ class PredictionsScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           _ForecastRow(
             label: 'This Month',
-            value: '$currencySymbol${currentMonthExpenses.toStringAsFixed(0)}',
+            value: _formatAmount(currentMonthExpenses, currencySymbol),
             isCurrent: true,
           ),
           const SizedBox(height: AppSpacing.sm),
           _ForecastRow(
             label: 'Next Month (Est.)',
-            value: '$currencySymbol${nextMonthEst.toStringAsFixed(0)}',
+            value: _formatAmount(nextMonthEst, currencySymbol),
             isCurrent: false,
           ),
           const SizedBox(height: AppSpacing.sm),
           _ForecastRow(
             label: '6 Months (Est.)',
-            value: '$currencySymbol${(nextMonthEst * 6).toStringAsFixed(0)}',
+            value: _formatAmount(nextMonthEst * 6, currencySymbol),
             isCurrent: false,
           ),
         ],
@@ -198,7 +204,7 @@ class PredictionsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$currencySymbol${netMonthlySavings.toStringAsFixed(0)} / $currencySymbol${savingsGoal.toStringAsFixed(0)} per mo', style: AppTextStyles.labelMedium),
+              Text('${_formatAmount(netMonthlySavings, currencySymbol)} / ${_formatAmount(savingsGoal, currencySymbol)} per mo', style: AppTextStyles.labelMedium),
               if (savingsGoal > 0 && netMonthlySavings > 0)
                 Text('~$monthsToGoal months to reach target', style: AppTextStyles.bodySmall)
               else if (savingsGoal > 0 && netMonthlySavings <= 0)

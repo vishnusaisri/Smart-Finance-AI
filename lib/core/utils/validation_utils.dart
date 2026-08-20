@@ -74,13 +74,17 @@ class ValidationUtils {
   }
 
   // Amount validation
-  static String? validateAmount(String? value, {double? min, double? max}) {
-    if (value == null || value.isEmpty) {
+  static String? validateAmount(String? value, {double? min, double? max, String symbol = '₹'}) {
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter an amount';
     }
     
-    final amount = double.tryParse(value);
-    if (amount == null) {
+    if (value.trim().length > 10) {
+      return 'Amount is too large (max 10 digits)';
+    }
+
+    final amount = double.tryParse(value.trim());
+    if (amount == null || amount.isInfinite || amount.isNaN) {
       return 'Please enter a valid number';
     }
     
@@ -89,11 +93,11 @@ class ValidationUtils {
     }
     
     if (min != null && amount < min) {
-      return 'Amount must be at least \$${min.toStringAsFixed(2)}';
+      return 'Amount must be at least $symbol${min.toStringAsFixed(2)}';
     }
     
     if (max != null && amount > max) {
-      return 'Amount must be less than \$${max.toStringAsFixed(2)}';
+      return 'Amount cannot exceed $symbol${max.toStringAsFixed(0)}';
     }
     
     return null;

@@ -142,6 +142,7 @@ class DashboardScreen extends ConsumerWidget {
                         userIncome: monthlyIncome,
                         totalExpenses: totalExpenses,
                         isMobile: isMobile,
+                        currencySymbol: userProfile.getCurrencySymbol(),
                       )
                           .animate()
                           .fadeIn(
@@ -301,6 +302,7 @@ class DashboardScreen extends ConsumerWidget {
     required double userIncome,
     required double totalExpenses,
     required bool isMobile,
+    required String currencySymbol,
   }) {
     // Calculate realistic trends based on data
     final balanceTrend = userIncome > 0 ? ((savings / userIncome) * 100) : 0.0;
@@ -315,6 +317,7 @@ class DashboardScreen extends ConsumerWidget {
             subtitle: 'Current savings',
             icon: Icons.account_balance_wallet,
             trend: balanceTrend > 0 ? balanceTrend.toDouble() : 0.0,
+            currencySymbol: currencySymbol,
           ),
 
           const SizedBox(
@@ -327,6 +330,7 @@ class DashboardScreen extends ConsumerWidget {
             subtitle: 'This month',
             icon: Icons.trending_up,
             trend: 0.0,
+            currencySymbol: currencySymbol,
           ),
 
           const SizedBox(
@@ -339,6 +343,7 @@ class DashboardScreen extends ConsumerWidget {
             subtitle: 'This month',
             icon: Icons.trending_down,
             trend: expenseTrend > 0 ? -expenseTrend.toDouble() : 0.0,
+            currencySymbol: currencySymbol,
           ),
         ],
       );
@@ -353,6 +358,7 @@ class DashboardScreen extends ConsumerWidget {
             subtitle: 'Current savings',
             icon: Icons.account_balance_wallet,
             trend: balanceTrend > 0 ? balanceTrend.toDouble() : 0.0,
+            currencySymbol: currencySymbol,
           ),
         ),
 
@@ -367,6 +373,7 @@ class DashboardScreen extends ConsumerWidget {
             subtitle: 'This month',
             icon: Icons.trending_up,
             trend: 0.0,
+            currencySymbol: currencySymbol,
           ),
         ),
 
@@ -381,6 +388,7 @@ class DashboardScreen extends ConsumerWidget {
             subtitle: 'This month',
             icon: Icons.trending_down,
             trend: expenseTrend > 0 ? -expenseTrend.toDouble() : 0.0,
+            currencySymbol: currencySymbol,
           ),
         ),
       ],

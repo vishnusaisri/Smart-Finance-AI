@@ -200,8 +200,9 @@ class UserProfile {
 
   String formatCurrency(double amount) {
     final symbol = getCurrencySymbol();
-    final formattedAmount = amount.toStringAsFixed(2);
-    return '$symbol$formattedAmount';
+    final isNegative = amount < 0;
+    final formattedAmount = amount.abs().toStringAsFixed(2);
+    return isNegative ? '-$symbol$formattedAmount' : '$symbol$formattedAmount';
   }
 }
 

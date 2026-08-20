@@ -7,17 +7,9 @@ async function createMasterExcel() {
   masterWb.creator = 'Smart Finance AI Test Automation Suite';
   masterWb.created = new Date();
 
-  // Load Web workbook
-  const webWb = new ExcelJS.Workbook();
-  await webWb.xlsx.readFile('Web_E2E_Test_Report.xlsx');
-
-  // Load Mobile workbook
-  const mobileWb = new ExcelJS.Workbook();
-  await mobileWb.xlsx.readFile('Android_Appium_Test_Report.xlsx');
-
-  // Function to clone worksheet into master
   function copySheet(srcSheet, targetName) {
-    const newSheet = masterWb.addWorksheet(targetName);
+    const cleanName = targetName.substring(0, 31);
+    const newSheet = masterWb.addWorksheet(cleanName);
     srcSheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
       const newRow = newSheet.getRow(rowNumber);
       row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
@@ -38,23 +30,35 @@ async function createMasterExcel() {
     });
   }
 
-  // Copy sheets
-  webWb.worksheets.forEach((sheet) => {
-    copySheet(sheet, `Web - ${sheet.name}`);
-  });
+  const reports = [
+    { file: 'Web_E2E_Test_Report.xlsx', prefix: 'Web' },
+    { file: 'Android_Appium_Test_Report.xlsx', prefix: 'Mobile' },
+    { file: 'Vulnerability_Security_Test_Report.xlsx', prefix: 'Sec' },
+    { file: 'Load_Performance_Test_Report.xlsx', prefix: 'Load' }
+  ];
 
-  mobileWb.worksheets.forEach((sheet) => {
-    copySheet(sheet, `Mobile - ${sheet.name}`);
-  });
+  for (const r of reports) {
+    if (fs.existsSync(r.file)) {
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.readFile(r.file);
+      wb.worksheets.forEach(sheet => {
+        copySheet(sheet, `${r.prefix} - ${sheet.name}`);
+      });
+    }
+  }
 
   const outDir = path.join(process.cwd(), 'Excel_Reports');
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
   await masterWb.xlsx.writeFile(path.join(outDir, 'All_Test_Results_Master.xlsx'));
-  fs.copyFileSync('Web_E2E_Test_Report.xlsx', path.join(outDir, 'Web_E2E_Test_Report.xlsx'));
-  fs.copyFileSync('Android_Appium_Test_Report.xlsx', path.join(outDir, 'Android_Appium_Test_Report.xlsx'));
 
-  console.log('Master Excel report generated in Excel_Reports folder!');
+  reports.forEach(r => {
+    if (fs.existsSync(r.file)) {
+      fs.copyFileSync(r.file, path.join(outDir, r.file));
+    }
+  });
+
+  console.log('Master Excel report generated in Excel_Reports folder for all 4 test categories!');
 }
 
 createMasterExcel();

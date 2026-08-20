@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/custom_button.dart';
@@ -8,8 +9,11 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/validation_utils.dart';
 import '../controllers/expense_controller.dart';
 import '../services/expense_category_service.dart';
+
+import '../../profile/providers/profile_providers.dart';
 
 class EditExpenseScreen extends ConsumerStatefulWidget {
   final String expenseId;
@@ -60,11 +64,54 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
     if (!_formKey.currentState!.validate() || _selectedCategory == null) return;
 
     final expensesAsync = ref.read(expensesProvider);
-    expensesAsync.whenData((expenses) {
+    final userProfile = ref.read(userProfileProvider);
+    final symbol = userProfile.getCurrencySymbol();
+    final newAmount = double.parse(_amountController.text);
+
+    expensesAsync.whenData((expenses) async {
       final originalExpense = expenses.firstWhere((e) => e.id == widget.expenseId);
-      
+
+      final now = DateTime.now();
+      final otherMonthExpenses = expenses
+          .where((e) => e.id != widget.expenseId && e.date.year == now.year && e.date.month == now.month)
+          .fold<double>(0, (sum, e) => sum + e.amount);
+      final availableWalletBalance = userProfile.monthlyIncome - otherMonthExpenses;
+
+      if (userProfile.monthlyIncome > 0 && newAmount > availableWalletBalance) {
+        final shouldProceed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF1E293B),
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text('Insufficient Money in Wallet', style: AppTextStyles.h4),
+              ],
+            ),
+            content: Text(
+              'Insufficient money in the wallet!\n\nYour available wallet balance is $symbol${availableWalletBalance.toStringAsFixed(2)}, but updated expense is $symbol${newAmount.toStringAsFixed(2)}.\n\nDo you still want to save this update?',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                child: const Text('Proceed Anyway'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldProceed != true) return;
+      }
+
       final updatedExpense = originalExpense.copyWith(
-        amount: double.parse(_amountController.text),
+        amount: newAmount,
         category: _selectedCategory!,
         description: _descriptionController.text.trim(),
         date: _selectedDate,
@@ -97,11 +144,24 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final expensesAsync = ref.watch(expensesProvider);
-    
+    final userProfile = ref.watch(userProfileProvider);
+    final symbol = userProfile.getCurrencySymbol();
+
     return expensesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       data: (expenses) {
         final categories = ExpenseCategoryService.getAllCategories();
+        
+        final now = DateTime.now();
+        final otherMonthExpenses = expenses
+            .where((e) => e.id != widget.expenseId && e.date.year == now.year && e.date.month == now.month)
+            .fold<double>(0, (sum, e) => sum + e.amount);
+        final availableWalletBalance = userProfile.monthlyIncome > 0
+            ? (userProfile.monthlyIncome - otherMonthExpenses)
+            : 0.0;
+
+        final newAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+        final isExceedingWallet = userProfile.monthlyIncome > 0 && newAmount > availableWalletBalance;
 
         return Scaffold(
           body: SingleChildScrollView(
@@ -115,23 +175,70 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
                     AppStrings.editExpense,
                     style: AppTextStyles.h2,
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Wallet Balance Banner
+                  GlassCard(
+                    child: Row(
+                      children: [
+                        Icon(
+                          isExceedingWallet ? Icons.warning_amber_rounded : Icons.account_balance_wallet_outlined,
+                          color: isExceedingWallet ? AppColors.warning : AppColors.success,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Available Wallet Balance', style: AppTextStyles.caption),
+                            Text(
+                              '$symbol${availableWalletBalance.toStringAsFixed(2)}',
+                              style: AppTextStyles.h4.copyWith(
+                                color: isExceedingWallet ? AppColors.warning : AppColors.success,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
 
                   CustomTextField(
                     label: AppStrings.expenseAmount,
                     controller: _amountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    prefixText: '₹ ',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter amount';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid number';
-                      }
-                      return null;
-                    },
+                    prefixText: '$symbol ',
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    onChanged: (_) => setState(() {}),
+                    validator: (value) => ValidationUtils.validateAmount(value, min: 0.01, max: 10000000, symbol: symbol),
                   ),
+                  if (isExceedingWallet) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Insufficient money in the wallet! Amount ($symbol${newAmount.toStringAsFixed(0)}) exceeds available balance ($symbol${availableWalletBalance.toStringAsFixed(0)}).',
+                              style: AppTextStyles.caption.copyWith(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
 
                   CustomTextField(

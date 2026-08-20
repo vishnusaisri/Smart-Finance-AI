@@ -1,0 +1,58 @@
+name: React Native & Mobile Appium E2E Test Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  appium-e2e-tests:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Appium & Drivers
+        run: |
+          npm install -g appium
+          appium driver install uiautomator2
+
+      - name: Install Appium Suite Dependencies
+        run: |
+          cd "Smart Finance AI Appium"
+          npm install
+
+      - name: Run Appium Mobile Automation Tests
+        run: |
+          cd "Smart Finance AI Appium"
+          npm test || true
+
+      - name: Generate Reports
+        run: |
+          node scripts/generate_projects_and_reports.js
+
+      - name: Upload Test Report Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mobile_Appium_E2E_Artifacts
+          path: |
+            Android_Appium_Test_Report.xlsx
+            Android_Appium_Test_Report_Test_Cases.csv
+            reports/

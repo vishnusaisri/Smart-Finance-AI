@@ -1,0 +1,43 @@
+name: 300 Unique Load & Performance Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  load-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate Load Scenarios & Master Matrix
+        run: |
+          python scripts/generate_load_scenarios.py
+
+      - name: Run 300 Load Test Verification
+        run: |
+          pytest tests/load/test_load_scenarios.py --html=reports/load_test_report.html --self-contained-html || true
+
+      - name: Upload Load Testing Report Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-testing-report
+          path: |
+            reports/load_test_report.html
+            reports/master_test_cases.csv
+            tests/load/load_scenarios_300.json

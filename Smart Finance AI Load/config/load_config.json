@@ -1,0 +1,9 @@
+{
+  "target_host": "http://localhost:49390",
+  "total_scenarios": 300,
+  "default_virtual_users": 50,
+  "thresholds": {
+    "p95_response_time_ms": 500,
+    "max_error_rate_percent": 1
+  }
+}
